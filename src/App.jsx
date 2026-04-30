@@ -41,7 +41,7 @@ export default function App() {
     dashboard:  needsAuth ? <LoginScreen /> : <DashboardScreen />,
     admin:      needsAuth ? <LoginScreen /> : <AdminScreen />,
     nomina:     needsAuth ? <LoginScreen /> : <NominaScreen />,
-    vacaciones: needsAuth ? <LoginScreen /> : <VacacionesScreen />,
+    vacaciones: <VacacionesScreen isAdmin={!!session} />,
     alerts:     needsAuth ? <LoginScreen /> : <AlertsScreen onNotifCount={setNotifCount} />,
   }
 
