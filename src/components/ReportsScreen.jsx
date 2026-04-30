@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getRegistros, calcularHoras, getEmpleados } from '../lib/api'
+import { getRegistros, calcularNomina, getEmpleados } from '../lib/api'
 
 export default function ReportsScreen() {
   const [periodo,  setPeriodo]  = useState('semana')
