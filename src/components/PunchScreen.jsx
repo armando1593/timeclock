@@ -37,7 +37,7 @@ export default function PunchScreen() {
     if (!emp) { setMsg({ text:'PIN incorrecto', type:'error' }); setLoading(false); return }
     const last = await getUltimoRegistro(emp.id)
     setEmpleado(emp); setIsIn(last?.tipo === 'entrada')
-    setLoading(false); startCam(); getGPS()
+    setLoading(false); getGPS()
   }
 
   function startCam() {
@@ -83,8 +83,6 @@ export default function PunchScreen() {
         }
       }
       let foto_url = null
-      const blob = await captureFrame()
-      if (blob) foto_url = await subirFoto(blob, empleado.id)
       await insertarRegistro({ empleado_id: empleado.id, tipo: isIn?'salida':'entrada', latitud: gps?.lat, longitud: gps?.lng, foto_url })
       setMsg({ text:`${isIn?'Salida':'Entrada'} registrada — ${empleado.nombre}`, type:'ok' })
       stopCam()
@@ -125,15 +123,6 @@ export default function PunchScreen() {
             <div className="emp-avatar">{empleado.nombre.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
             <div><div className="emp-name">{empleado.nombre}</div><div className="emp-dept">{empleado.departamento}</div></div>
             <span className={`status-badge ${isIn?'inside':'outside'}`}>{isIn?'Dentro':'Fuera'}</span>
-          </div>
-          <div className="cam-box">
-            {camOn && <video ref={videoRef} autoPlay playsInline muted className="cam-video" />}
-            {!camOn && <div className="cam-placeholder"><CamIcon /><span>Cámara</span></div>}
-          </div>
-          <canvas ref={canvasRef} style={{ display:'none' }} />
-          <div className={`gps-row gps-${gpsStatus}`}>
-            <div className="gps-dot" />
-            <span>{gpsStatus==='loading'?'Obteniendo ubicación...':gpsStatus==='ok'?`GPS: ${gps.lat.toFixed(4)}, ${gps.lng.toFixed(4)}`:`GPS: ${gps?.lat?.toFixed(4)}, ${gps?.lng?.toFixed(4)} (sim)`}</span>
           </div>
           {geoError && <div className="msg msg-error">📍 {geoError}</div>}
           {msg && <div className={`msg msg-${msg.type}`}>{msg.text}</div>}
