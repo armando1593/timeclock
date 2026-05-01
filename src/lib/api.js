@@ -89,108 +89,23 @@ export async function responderVacaciones(id, estado, admin_nota) {
 }
 
 export async function calcularNomina(desde, hasta) {
-  const recs = await getRegistros({ d
-cat > src/lib/api.js << 'ENDOFFILE'
-import { supabase } from './supabase'
-
-export async function getEmpleados() {
-  const { data, error } = await supabase.from('empleados').select('id, nombre, departamento, horas_meta, tarifa_hora, tipo_pago').eq('activo', true).order('nombre')
-  if (error) throw error
-  return data
-}
-
-export async function verificarPin(pin) {
-  const { data, error } = await supabase.from('empleados').select('id, nombre, departamento, horas_meta').eq('pin_hash', pin).eq('activo', true).single()
-  if (error) return null
-  return data
-}
-
-export async function updateEmpleado(id, updates) {
-  const { error } = await supabase.from('empleados').update(updates).eq('id', id)
-  if (error) throw error
-}
-
-export async function insertarRegistro({ empleado_id, tipo, latitud, longitud, foto_url }) {
-  const { data, error } = await supabase.from('registros').insert({ empleado_id, tipo, latitud, longitud, foto_url }).select().single()
-  if (error) throw error
-  return data
-}
-
-export async function getRegistros({ desde, hasta, empleado_id, tipo } = {}) {
-  let q = supabase.from('registros').select('id, tipo, timestamp, latitud, longitud, foto_url, empleados(id, nombre, departamento)').order('timestamp', { ascending: false })
-  if (desde) q = q.gte('timestamp', desde)
-  if (hasta) q = q.lte('timestamp', hasta)
-  if (empleado_id) q = q.eq('empleado_id', empleado_id)
-  if (tipo) q = q.eq('tipo', tipo)
-  const { data, error } = await q
-  if (error) throw error
-  return data
-}
-
-export async function getUltimoRegistro(empleado_id) {
-  const { data, error } = await supabase.from('registros').select('tipo, timestamp').eq('empleado_id', empleado_id).order('timestamp', { ascending: false }).limit(1).maybeSingle()
-  if (error) throw error
-  return data
-}
-
-export async function subirFoto(blob, empleadoId) {
-  const filename = empleadoId + '/' + Date.now() + '.jpg'
-  const { error } = await supabase.storage.from('fotos-ponche').upload(filename, blob, { contentType: 'image/jpeg', upsert: false })
-  if (error) throw error
-  const { data: { publicUrl } } = supabase.storage.from('fotos-ponche').getPublicUrl(filename)
-  return publicUrl
-}
-
-export async function getGeofencing() {
-  const { data, error } = await supabase.from('geofencing').select('*').single()
-  if (error) return { latitud: 18.4655, longitud: -66.1057, radio_m: 200, activo: false }
-  return data
-}
-
-export async function updateGeofencing(updates) {
-  const { error } = await supabase.from('geofencing').update(updates).eq('id', 1)
-  if (error) throw error
-}
-
-export function distanciaMetros(lat1, lon1, lat2, lon2) {
-  const R = 6371000
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLon = (lon2 - lon1) * Math.PI / 180
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-}
-
-export async function solicitarVacaciones({ empleado_id, fecha_inicio, fecha_fin, motivo }) {
-  const { data, error } = await supabase.from('vacaciones').insert({ empleado_id, fecha_inicio, fecha_fin, motivo }).select().single()
-  if (error) throw error
-  return data
-}
-
-export async function getVacaciones({ estado, empleado_id } = {}) {
-  let q = supabase.from('vacaciones').select('id, fecha_inicio, fecha_fin, motivo, estado, admin_nota, creado_en, empleados(id, nombre, departamento)').order('creado_en', { ascending: false })
-  if (estado) q = q.eq('estado', estado)
-  if (empleado_id) q = q.eq('empleado_id', empleado_id)
-  const { data, error } = await q
-  if (error) throw error
-  return data
-}
-
-export async function responderVacaciones(id, estado, admin_nota) {
-  const nota = admin_nota || ''
-  const { error } = await supabase.from('vacaciones').update({ estado, admin_nota: nota, revisado_en: new Date().toISOString() }).eq('id', id)
-  if (error) throw error
-}
-
-export async function calcularNomina(desde, hasta) {
   const recs = await getRegistros({ desde, hasta })
   const emps = await getEmpleados()
   return emps.map(function(emp) {
-    const er = recs.filter(function(r) { return r.empleados && r.empleados.id === emp.id }).sort(function(a, b) { return new Date(a.timestamp) - new Date(b.timestamp) })
+    const er = recs.filter(function(r) {
+      return r.empleados && r.empleados.id === emp.id
+    }).sort(function(a, b) {
+      return new Date(a.timestamp) - new Date(b.timestamp)
+    })
     let horas = 0
     let lastIn = null
     er.forEach(function(r) {
-      if (r.tipo === 'entrada') { lastIn = new Date(r.timestamp) }
-      else if (r.tipo === 'salida' && lastIn) { horas += (new Date(r.timestamp) - lastIn) / 3600000; lastIn = null }
+      if (r.tipo === 'entrada') {
+        lastIn = new Date(r.timestamp)
+      } else if (r.tipo === 'salida' && lastIn) {
+        horas += (new Date(r.timestamp) - lastIn) / 3600000
+        lastIn = null
+      }
     })
     if (lastIn) horas += (Date.now() - lastIn) / 3600000
     const tarifa = emp.tarifa_hora || 0
@@ -221,10 +136,18 @@ export async function getDashboardStats() {
 
   const emps = await getEmpleados()
 
-  const todayResult = await supabase.from('registros').select('empleado_id, tipo, timestamp').gte('timestamp', hoy + 'T04:00:00.000Z').order('timestamp', { ascending: false })
+  const todayResult = await supabase
+    .from('registros')
+    .select('empleado_id, tipo, timestamp')
+    .gte('timestamp', hoy + 'T04:00:00.000Z')
+    .order('timestamp', { ascending: false })
   const todayRecs = todayResult.data || []
 
-  const weekResult = await supabase.from('registros').select('empleado_id, tipo, timestamp').gte('timestamp', weekStart.toISOString()).order('timestamp', { ascending: false })
+  const weekResult = await supabase
+    .from('registros')
+    .select('empleado_id, tipo, timestamp')
+    .gte('timestamp', weekStart.toISOString())
+    .order('timestamp', { ascending: false })
   const weekRecs = weekResult.data || []
 
   const presentes = new Set()
@@ -234,7 +157,9 @@ export async function getDashboardStats() {
     const salidas = er.filter(function(r) { return r.tipo === 'salida' })
     const li = entradas.length > 0 ? entradas[entradas.length - 1] : null
     const lo = salidas.length > 0 ? salidas[salidas.length - 1] : null
-    if (li && (!lo || new Date(li.timestamp) > new Date(lo.timestamp))) presentes.add(e.id)
+    if (li && (!lo || new Date(li.timestamp) > new Date(lo.timestamp))) {
+      presentes.add(e.id)
+    }
   })
 
   const tardanzas = weekRecs.filter(function(r) {
@@ -256,12 +181,13 @@ export async function getDashboardStats() {
   })
 
   const asistenciaPorEmp = emps.map(function(e) {
-    const diasUnicos = new Set(
-      weekRecs
-        .filter(function(r) { return r.empleado_id === e.id && r.tipo === 'entrada' })
-        .map(function(r) { return new Date(r.timestamp).toLocaleDateString() })
-    ).size
-    return { nombre: e.nombre.split(' ')[0], entradas: diasUnicos }
+    const diasSet = new Set()
+    weekRecs.forEach(function(r) {
+      if (r.empleado_id === e.id && r.tipo === 'entrada') {
+        diasSet.add(new Date(r.timestamp).toLocaleDateString())
+      }
+    })
+    return { nombre: e.nombre.split(' ')[0], entradas: diasSet.size }
   })
 
   return {
@@ -270,7 +196,9 @@ export async function getDashboardStats() {
     ausentesHoy: emps.length - presentes.size,
     tardanzasSemana: tardanzas,
     registrosHoy: todayRecs.length,
-    horasPorDia: Object.entries(horasPorDia).map(function(entry) { return { dia: entry[0], cnt: entry[1] } }),
+    horasPorDia: Object.entries(horasPorDia).map(function(entry) {
+      return { dia: entry[0], cnt: entry[1] }
+    }),
     asistenciaPorEmp: asistenciaPorEmp,
   }
 }
