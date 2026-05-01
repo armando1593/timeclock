@@ -5,8 +5,6 @@ import { calcularNomina, getEmpleados, updateEmpleado } from '../lib/api'
 const TASAS = {
   FICA:      0.062,   // Social Security 6.2%
   MEDICARE:  0.0145,  // Medicare 1.45%
-  CHOFERIL:  0.005,   // Fondo del Seguro del Estado 0.5%
-  SINOT:     0.003,   // SINOT 0.3%
 }
 
 // Tabla de contribución de PR (por quincena) - 2024
@@ -29,17 +27,12 @@ function calcularContribucion(salarioBrutoQuincenal, exenciones = 1) {
 function calcularDeducciones(salarioBruto, exenciones = 1) {
   const fica      = salarioBruto * TASAS.FICA
   const medicare  = salarioBruto * TASAS.MEDICARE
-  const choferil  = salarioBruto * TASAS.CHOFERIL
-  const sinot     = salarioBruto * TASAS.SINOT
   const contrib   = calcularContribucion(salarioBruto, exenciones)
-  const totalDed  = fica + medicare + choferil + sinot + contrib
   const neto      = salarioBruto - totalDed
 
   return {
     fica:     Math.round(fica * 100) / 100,
     medicare: Math.round(medicare * 100) / 100,
-    choferil: Math.round(choferil * 100) / 100,
-    sinot:    Math.round(sinot * 100) / 100,
     contrib:  Math.round(contrib * 100) / 100,
     totalDed: Math.round(totalDed * 100) / 100,
     neto:     Math.round(neto * 100) / 100,
@@ -101,8 +94,6 @@ export default function NominaScreen() {
           <td class="num">$${(emp.salarioTotal||0).toFixed(2)}</td>
           <td class="num">$${ded.fica.toFixed(2)}</td>
           <td class="num">$${ded.medicare.toFixed(2)}</td>
-          <td class="num">$${ded.choferil.toFixed(2)}</td>
-          <td class="num">$${ded.sinot.toFixed(2)}</td>
           <td class="num">$${ded.contrib.toFixed(2)}</td>
           <td class="num ded">$${ded.totalDed.toFixed(2)}</td>
           <td class="num neto">$${ded.neto.toFixed(2)}</td>
@@ -115,13 +106,10 @@ export default function NominaScreen() {
       return {
         fica:     s.fica     + d.fica,
         medicare: s.medicare + d.medicare,
-        choferil: s.choferil + d.choferil,
-        sinot:    s.sinot    + d.sinot,
         contrib:  s.contrib  + d.contrib,
         totalDed: s.totalDed + d.totalDed,
         neto:     s.neto     + d.neto,
       }
-    }, { fica:0, medicare:0, choferil:0, sinot:0, contrib:0, totalDed:0, neto:0 })
 
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
     <title>Nómina ${periodoLabel}</title>
@@ -176,8 +164,6 @@ export default function NominaScreen() {
     <div class="tasas">
       <div class="tasa-card"><div class="tasa-nombre">FICA</div><div class="tasa-pct">6.20%</div></div>
       <div class="tasa-card"><div class="tasa-nombre">Medicare</div><div class="tasa-pct">1.45%</div></div>
-      <div class="tasa-card"><div class="tasa-nombre">Choferil</div><div class="tasa-pct">0.50%</div></div>
-      <div class="tasa-card"><div class="tasa-nombre">SINOT</div><div class="tasa-pct">0.30%</div></div>
       <div class="tasa-card"><div class="tasa-nombre">Contribución PR</div><div class="tasa-pct">Variable</div></div>
     </div>
 
@@ -187,7 +173,6 @@ export default function NominaScreen() {
         <th>Empleado</th><th>Depto.</th><th>Hrs Reg.</th><th>Hrs Extra</th><th>Tarifa</th>
         <th class="num">Bruto</th>
         <th class="num">FICA</th><th class="num">Medicare</th>
-        <th class="num">Choferil</th><th class="num">SINOT</th>
         <th class="num">Contrib. PR</th>
         <th class="num">Total Ded.</th>
         <th class="num">Neto</th>
@@ -199,8 +184,6 @@ export default function NominaScreen() {
           <td class="num">$${totalBruto.toFixed(2)}</td>
           <td class="num">$${totDed.fica.toFixed(2)}</td>
           <td class="num">$${totDed.medicare.toFixed(2)}</td>
-          <td class="num">$${totDed.choferil.toFixed(2)}</td>
-          <td class="num">$${totDed.sinot.toFixed(2)}</td>
           <td class="num">$${totDed.contrib.toFixed(2)}</td>
           <td class="num ded">$${totDed.totalDed.toFixed(2)}</td>
           <td class="num neto">$${totDed.neto.toFixed(2)}</td>
@@ -215,7 +198,6 @@ export default function NominaScreen() {
 
     <div class="footer">
       <span>VR Insurance Group · Sistema de Control de Asistencia</span>
-      <span>Tasas: FICA 6.2% · Medicare 1.45% · Choferil 0.5% · SINOT 0.3% · Contribución PR (tablas Hacienda 2024)</span>
     </div>
     </body></html>`
 
@@ -242,7 +224,6 @@ export default function NominaScreen() {
       </div>
 
       <div style={{background:'#FAEEDA',borderRadius:'var(--border-radius-md)',padding:'10px 14px',marginBottom:14,fontSize:12,color:'#633806'}}>
-        ⚠️ Deducciones calculadas automáticamente: FICA 6.2% · Medicare 1.45% · Choferil 0.5% · SINOT 0.3% · Contribución PR (tablas Hacienda 2024)
       </div>
 
       {loading && <div className="loading-bar" />}
@@ -286,8 +267,6 @@ export default function NominaScreen() {
                 <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
                 <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
                 <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
-                <div className="nomina-row"><span>Choferil (0.5%)</span><span style={{color:'#D85A30'}}>-${ded.choferil.toFixed(2)}</span></div>
-                <div className="nomina-row"><span>SINOT (0.3%)</span><span style={{color:'#D85A30'}}>-${ded.sinot.toFixed(2)}</span></div>
                 <div className="nomina-row"><span>Contribución PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>
                 <div className="nomina-row" style={{fontWeight:500,borderTop:'0.5px solid var(--gray-200)',paddingTop:4,marginTop:2}}>
                   <span>Total deducciones</span>
