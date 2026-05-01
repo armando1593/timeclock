@@ -160,8 +160,7 @@ export async function getDashboardStats() {
 
   const asistenciaPorEmp = emps.map(e => ({
     nombre: e.nombre.split(' ')[0],
-    entradas: weekRecs.filter(r => r.empleado_id === e.id && r.tipo === 'entrada').length
-  }))
+   entradas: new Set(weekRecs.filter(r => r.empleado_id === e.id && r.tipo === 'entrada').map(r => new Date(r.timestamp).toLocaleDateString())).size
 
   return {
     totalEmpleados: emps.length,
