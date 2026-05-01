@@ -3,7 +3,7 @@ import { getRegistros, getEmpleados, getVacaciones } from '../lib/api'
 
 // ⚠️ Reemplaza con tu nueva clave de Groq después de borrar la anterior
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
-const GROQ_MODEL   = 'llama3-8b-8192'
+const GROQ_MODEL   = 'llama-3.1-8b-instant'
 
 const SUGERENCIAS = [
   "¿Quién llegó tarde hoy?",
