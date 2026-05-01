@@ -226,7 +226,6 @@ export async function getDashboardStats() {
     horasPorDia: Object.entries(horasPorDia).map(([dia, cnt]) => ({ dia, cnt })),
     asistenciaPorEmp,
   }
-}
 
   const [todayRecs, weekRecs, emps] = await Promise.all([
     getRegistros({ desde: todayStart }),
