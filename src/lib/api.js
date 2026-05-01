@@ -169,8 +169,64 @@ export async function calcularNomina(desde, hasta) {
 
 export async function getDashboardStats() {
   const now = new Date()
-  const todayStart = new Date(now.toISOString().split('T')[0] + 'T04:00:00.000Z').toISOString()
-  const weekStart = (() => { const d = new Date(now); d.setDate(d.getDate()-6); d.setHours(0,0,0,0); return d.toISOString() })()
+  const hoy = now.toISOString().split('T')[0]
+  const weekStart = new Date(now)
+  weekStart.setDate(weekStart.getDate() - 6)
+  weekStart.setHours(0,0,0,0)
+
+  const [todayRecs, weekRecs, emps] = await Promise.all([
+    supabase.from('registros').select('empleado_id, tipo, timestamp, empleados(id, nombre, departamento)')
+      .gte('timestamp', hoy + 'T04:00:00.000Z')
+      .order('timestamp', { ascending: false })
+      .then(r => r.data || []),
+    supabase.from('registros').select('empleado_id, tipo, timestamp, empleados(id, nombre, departamento)')
+      .gte('timestamp', weekStart.toISOString())
+      .order('timestamp', { ascending: false })
+      .then(r => r.data || []),
+    getEmpleados()
+  ])
+
+  const presentes = new Set()
+  emps.forEach(e => {
+    const er = todayRecs.filter(r => r.empleado_id === e.id)
+    const li = er.filter(r => r.tipo === 'entrada').pop()
+    const lo = er.filter(r => r.tipo === 'salida').pop()
+    if (li && (!lo || new Date(li.timestamp) > new Date(lo.timestamp))) presentes.add(e.id)
+  })
+
+  const tardanzas = weekRecs.filter(r => {
+    const h = new Date(r.timestamp)
+    const prHour = (h.getUTCHours() - 4 + 24) % 24
+    return r.tipo === 'entrada' && prHour >= 9
+  }).length
+
+  const horasPorDia = {}
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i)
+    horasPorDia[d.toLocaleDateString('es-PR', { weekday:'short' })] = 0
+  }
+  weekRecs.forEach(r => {
+    if (r.tipo !== 'entrada') return
+    const d = new Date(r.timestamp)
+    const label = d.toLocaleDateString('es-PR', { weekday:'short' })
+    if (horasPorDia[label] !== undefined) horasPorDia[label]++
+  })
+
+  const asistenciaPorEmp = emps.map(e => ({
+    nombre: e.nombre.split(' ')[0],
+    entradas: weekRecs.filter(r => r.empleado_id === e.id && r.tipo === 'entrada').length
+  }))
+
+  return {
+    totalEmpleados: emps.length,
+    presentesHoy: presentes.size,
+    ausentesHoy: emps.length - presentes.size,
+    tardanzasSemana: tardanzas,
+    registrosHoy: todayRecs.length,
+    horasPorDia: Object.entries(horasPorDia).map(([dia, cnt]) => ({ dia, cnt })),
+    asistenciaPorEmp,
+  }
+}
 
   const [todayRecs, weekRecs, emps] = await Promise.all([
     getRegistros({ desde: todayStart }),
