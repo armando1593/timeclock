@@ -43,7 +43,7 @@ export default function App() {
     punch:      <PunchScreen />,
     dashboard:  needsAuth ? <LoginScreen /> : <DashboardScreen />,
     admin:      needsAuth ? <LoginScreen /> : <AdminScreen />,
-    nomina:     needsAuth ? <LoginScreen /> : <NominaScreen />,
+    nomina: <NominaScreen isAdmin={!!session} />,
     vacaciones: <VacacionesScreen isAdmin={!!session} />,
     ia:         needsAuth ? <LoginScreen /> : <AsistenteIA />,
     alerts:     needsAuth ? <LoginScreen /> : <AlertsScreen onNotifCount={setNotifCount} />,
