@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { verificarPin, insertarRegistro, getUltimoRegistro, subirFoto, getGeofencing, distanciaMetros } from '../lib/api'
+import NotificacionesPush from './NotificacionesPush'
 
 export default function PunchScreen() {
   const [pin,       setPin]      = useState('')
@@ -130,6 +131,7 @@ export default function PunchScreen() {
             {loading?'Guardando...':isIn?'Ponchar salida':'Ponchar entrada'}
           </button>
           <button className="cancel-btn" onClick={cancelPunch}>Cancelar</button>
+<NotificacionesPush />
         </div>
       )}
     </div>
