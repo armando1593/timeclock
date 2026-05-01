@@ -180,7 +180,7 @@ export async function getDashboardStats() {
 
   const presentes = new Set()
   emps.forEach(e => {
-    const er = todayRecs.filter(r => r.empleados?.id === e.id)
+    const er = todayRecs.filter(r => r.empleados?.id === e.id || r.empleado_id === e.id)
     const li = er.filter(r => r.tipo === 'entrada').pop()
     const lo = er.filter(r => r.tipo === 'salida').pop()
     if (li && (!lo || new Date(li.timestamp) > new Date(lo.timestamp))) presentes.add(e.id)
