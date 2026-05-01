@@ -170,7 +170,7 @@ export async function calcularNomina(desde, hasta) {
 export async function getDashboardStats() {
   const now = new Date()
   const offset = now.getTimezoneOffset() * 60000
-  const todayStart = new Date(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - offset).toISOString()
+  const todayStart = new Date(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - + offset).toISOString()
   const weekStart = (() => { const d = new Date(now); d.setDate(d.getDate()-6); d.setHours(0,0,0,0); return d.toISOString() })()
 
   const [todayRecs, weekRecs, emps] = await Promise.all([
