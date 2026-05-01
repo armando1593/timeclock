@@ -42,7 +42,7 @@ export default function App() {
   const screens = {
     punch:      <PunchScreen />,
     dashboard:  needsAuth ? <LoginScreen /> : <DashboardScreen />,
-    admin:      needsAuth ? <LoginScreen /> : <AdminScreen />,
+    admin: <AdminScreen isAdmin={!!session} />,
     nomina: <NominaScreen isAdmin={!!session} />,
     vacaciones: <VacacionesScreen isAdmin={!!session} />,
     ia:         needsAuth ? <LoginScreen /> : <AsistenteIA />,
