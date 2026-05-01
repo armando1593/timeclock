@@ -1,30 +1,30 @@
 import { useState, useRef, useEffect } from 'react'
-import { getRegistros, getEmpleados, calcularNomina, getVacaciones } from '../lib/api'
+import { getRegistros, getEmpleados, getVacaciones } from '../lib/api'
+
+// ⚠️ Reemplaza con tu nueva clave de Groq después de borrar la anterior
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const GROQ_MODEL   = 'llama3-8b-8192'
 
 const SUGERENCIAS = [
   "¿Quién llegó tarde hoy?",
-  "¿Cuántas horas trabajó María esta semana?",
-  "¿Quién tiene más ausencias este mes?",
-  "¿Cuánto es la nómina total esta quincena?",
+  "¿Cuántas horas trabajó esta semana?",
+  "¿Quién está ausente hoy?",
+  "Dame un resumen de asistencia",
   "¿Quién tiene vacaciones pendientes?",
-  "Dame un resumen de asistencia de esta semana",
 ]
 
 async function obtenerContexto() {
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const weekStart  = (() => { const d = new Date(now); d.setDate(d.getDate()-6); d.setHours(0,0,0,0); return d.toISOString() })()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-  const [emps, todayRecs, weekRecs, monthRecs, vacaciones] = await Promise.all([
+  const [emps, todayRecs, weekRecs, vacaciones] = await Promise.all([
     getEmpleados(),
     getRegistros({ desde: todayStart }),
     getRegistros({ desde: weekStart }),
-    getRegistros({ desde: monthStart }),
     getVacaciones(),
   ])
 
-  // Calcular horas por empleado esta semana
   const horasPorEmp = {}
   emps.forEach(e => {
     const recs = weekRecs.filter(r => r.empleados?.id === e.id).sort((a,b) => new Date(a.timestamp)-new Date(b.timestamp))
@@ -37,29 +37,25 @@ async function obtenerContexto() {
     horasPorEmp[e.nombre] = Math.round(hrs*10)/10
   })
 
-  // Tardanzas hoy (entrada después de 9am)
   const tardanzasHoy = todayRecs
     .filter(r => r.tipo === 'entrada' && new Date(r.timestamp).getHours() >= 9)
     .map(r => ({ nombre: r.empleados?.nombre, hora: new Date(r.timestamp).toLocaleTimeString('es-PR',{hour:'2-digit',minute:'2-digit'}) }))
 
-  // Ausentes hoy
   const presentesHoy = new Set(todayRecs.filter(r=>r.tipo==='entrada').map(r=>r.empleados?.id))
-  const ausentesHoy = emps.filter(e => !presentesHoy.has(e.id)).map(e => e.nombre)
+  const ausentesHoy  = emps.filter(e => !presentesHoy.has(e.id)).map(e => e.nombre)
 
-  // Tardanzas esta semana
   const tardanzasSemana = weekRecs
     .filter(r => r.tipo === 'entrada' && new Date(r.timestamp).getHours() >= 9)
     .map(r => ({ nombre: r.empleados?.nombre, dia: new Date(r.timestamp).toLocaleDateString('es-PR',{weekday:'long'}), hora: new Date(r.timestamp).toLocaleTimeString('es-PR',{hour:'2-digit',minute:'2-digit'}) }))
 
-  // Vacaciones pendientes
   const vacsPendientes = vacaciones.filter(v => v.estado === 'pendiente')
     .map(v => ({ nombre: v.empleados?.nombre, desde: v.fecha_inicio, hasta: v.fecha_fin }))
 
   return {
-    fecha: now.toLocaleDateString('es-PR', { weekday:'long', year:'numeric', month:'long', day:'numeric' }),
-    hora: now.toLocaleTimeString('es-PR', { hour:'2-digit', minute:'2-digit' }),
+    fecha: now.toLocaleDateString('es-PR',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
+    hora:  now.toLocaleTimeString('es-PR',{hour:'2-digit',minute:'2-digit'}),
     totalEmpleados: emps.length,
-    empleados: emps.map(e => ({ nombre: e.nombre, departamento: e.departamento, tarifa: e.tarifa_hora || 0, horasMeta: e.horas_meta || 8 })),
+    empleados: emps.map(e => ({ nombre: e.nombre, departamento: e.departamento, horasMeta: e.horas_meta||8 })),
     presentesHoy: presentesHoy.size,
     ausentesHoy,
     tardanzasHoy,
@@ -70,62 +66,66 @@ async function obtenerContexto() {
   }
 }
 
-export default function AsistenteIA({ }) {
+export default function AsistenteIA() {
   const [mensajes, setMensajes] = useState([
-    { role: 'assistant', text: '¡Hola! Soy tu asistente de RRHH con IA. Puedo responder preguntas sobre asistencia, horas trabajadas, tardanzas, nómina y más. ¿En qué te puedo ayudar hoy?' }
+    { role: 'assistant', text: '¡Hola! Soy tu asistente de RRHH con IA. Puedo responder preguntas sobre asistencia, horas trabajadas, tardanzas y más. ¿En qué te puedo ayudar?' }
   ])
-  const [input,    setInput]    = useState('')
-  const [loading,  setLoading]  = useState(false)
+  const [input,   setInput]   = useState('')
+  const [loading, setLoading] = useState(false)
   const bottomRef = useRef(null)
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [mensajes])
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [mensajes])
 
   async function enviar(texto) {
     const pregunta = texto || input.trim()
     if (!pregunta || loading) return
     setInput('')
-    setMensajes(m => [...m, { role: 'user', text: pregunta }])
+    setMensajes(m => [...m, { role:'user', text:pregunta }])
     setLoading(true)
 
     try {
       const ctx = await obtenerContexto()
-      const systemPrompt = `Eres un asistente de Recursos Humanos inteligente para VR Insurance Group en Puerto Rico. 
-Tienes acceso a los datos de asistencia en tiempo real. Responde siempre en español, de forma clara y concisa.
-Usa los datos reales para responder. Si no tienes la información exacta, dilo honestamente.
-Sé profesional pero amigable. Usa emojis ocasionalmente para hacer las respuestas más claras.
+      const systemPrompt = `Eres un asistente de Recursos Humanos para VR Insurance Group en Puerto Rico.
+Responde siempre en español, de forma clara y concisa. Usa los datos reales para responder.
+Sé profesional pero amigable. Usa emojis ocasionalmente.
 
-DATOS ACTUALES DEL SISTEMA (${ctx.fecha}, ${ctx.hora}):
-- Total empleados activos: ${ctx.totalEmpleados}
+DATOS ACTUALES (${ctx.fecha}, ${ctx.hora}):
+- Total empleados: ${ctx.totalEmpleados}
 - Empleados: ${JSON.stringify(ctx.empleados)}
 - Presentes hoy: ${ctx.presentesHoy}
 - Ausentes hoy: ${ctx.ausentesHoy.length > 0 ? ctx.ausentesHoy.join(', ') : 'Ninguno'}
 - Tardanzas hoy: ${ctx.tardanzasHoy.length > 0 ? JSON.stringify(ctx.tardanzasHoy) : 'Ninguna'}
 - Tardanzas esta semana: ${JSON.stringify(ctx.tardanzasSemana)}
-- Horas trabajadas esta semana por empleado: ${JSON.stringify(ctx.horasPorEmpleadoSemana)}
-- Registros de ponche hoy: ${ctx.registrosHoy}
-- Vacaciones pendientes de aprobación: ${JSON.stringify(ctx.vacacionesPendientes)}`
+- Horas por empleado esta semana: ${JSON.stringify(ctx.horasPorEmpleadoSemana)}
+- Vacaciones pendientes: ${JSON.stringify(ctx.vacacionesPendientes)}`
 
       const historial = mensajes.slice(-6).map(m => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
+        role: m.role,
         content: m.text
       }))
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: GROQ_MODEL,
           max_tokens: 1000,
-          system: systemPrompt,
-          messages: [...historial, { role: 'user', content: pregunta }]
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...historial,
+            { role: 'user', content: pregunta }
+          ]
         })
       })
 
       const data = await response.json()
-      const respuesta = data.content?.[0]?.text || 'No pude obtener una respuesta. Intenta de nuevo.'
-      setMensajes(m => [...m, { role: 'assistant', text: respuesta }])
+      const respuesta = data.choices?.[0]?.message?.content || 'No pude obtener respuesta. Intenta de nuevo.'
+      setMensajes(m => [...m, { role:'assistant', text:respuesta }])
     } catch(e) {
-      setMensajes(m => [...m, { role: 'assistant', text: 'Hubo un error al conectar con la IA. Verifica tu conexión e intenta de nuevo.' }])
+      setMensajes(m => [...m, { role:'assistant', text:'Error al conectar. Verifica tu conexión e intenta de nuevo.' }])
     } finally { setLoading(false) }
   }
 
@@ -159,22 +159,21 @@ DATOS ACTUALES DEL SISTEMA (${ctx.fecha}, ${ctx.hora}):
       </div>
 
       <div className="ia-sugerencias">
-        {SUGERENCIAS.slice(0,3).map((s,i) => (
+        {SUGERENCIAS.map((s,i) => (
           <button key={i} className="ia-sug" onClick={() => enviar(s)}>{s}</button>
         ))}
       </div>
 
       <div className="ia-input-row">
-        <input
-          className="ia-input"
+        <input className="ia-input"
           placeholder="Pregúntame sobre asistencia, horas, tardanzas..."
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && enviar()}
+          onKeyDown={e => e.key==='Enter' && enviar()}
           disabled={loading}
         />
         <button className="ia-send" onClick={() => enviar()} disabled={loading || !input.trim()}>
-          {loading ? '...' : '↑'}
+          {loading ? '…' : '↑'}
         </button>
       </div>
     </div>
