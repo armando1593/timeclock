@@ -227,12 +227,7 @@ export async function getDashboardStats() {
     asistenciaPorEmp,
   }
 
-  const [todayRecs, weekRecs, emps] = await Promise.all([
-    getRegistros({ desde: todayStart }),
-    getRegistros({ desde: weekStart }),
-    getEmpleados()
-  ])
-
+ 
   const presentes = new Set()
   emps.forEach(e => {
     const er = todayRecs.filter(r => r.empleados?.id === e.id || r.empleado_id === e.id)
