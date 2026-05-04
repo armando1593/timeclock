@@ -129,43 +129,45 @@ export async function calcularNomina(desde, hasta) {
 
 export async function getDashboardStats() {
   const now = new Date()
-  const hoy = now.toISOString().split('T')[0]
-  const weekStart = new Date(now)
-  weekStart.setDate(weekStart.getDate() - 6)
-  weekStart.setHours(0, 0, 0, 0)
-
   const emps = await getEmpleados()
 
-  const todayResult = await supabase
+  // Usar SQL directo con timezone de PR para obtener registros de hoy
+  const { data: todayRecs } = await supabase
     .from('registros')
     .select('empleado_id, tipo, timestamp')
-    new Date(new Date().toISOString().split('T')[0] + 'T04:00:00.000Z').toISOString()
-    .order('timestamp', { ascending: false })
-  const todayRecs = todayResult.data || []
+    .gte('timestamp', now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + 'T04:00:00.000Z')
+    .order('timestamp', { ascending: true })
 
-  const weekResult = await supabase
-    .from('registros')
-    .select('empleado_id, tipo, timestamp')
-    .gte('timestamp', weekStart.toISOString())
-    .order('timestamp', { ascending: false })
-  const weekRecs = weekResult.data || []
+  const registros = todayRecs || []
 
+  // Para cada empleado, encontrar su ultimo registro de hoy
   const presentes = new Set()
   emps.forEach(function(e) {
-    const er = todayRecs.filter(function(r) { return r.empleado_id === e.id })
-    const entradas = er.filter(function(r) { return r.tipo === 'entrada' })
-    const salidas = er.filter(function(r) { return r.tipo === 'salida' })
-    const li = entradas.length > 0 ? entradas[entradas.length - 1] : null
-    const lo = salidas.length > 0 ? salidas[salidas.length - 1] : null
-    if (li && (!lo || new Date(li.timestamp) > new Date(lo.timestamp))) {
+    const misRegistros = registros.filter(function(r) { return r.empleado_id === e.id })
+    if (misRegistros.length === 0) return
+    const ultimo = misRegistros[misRegistros.length - 1]
+    if (ultimo.tipo === 'entrada') {
       presentes.add(e.id)
     }
   })
 
+  const weekStart = new Date(now)
+  weekStart.setDate(weekStart.getDate() - 6)
+  weekStart.setHours(0, 0, 0, 0)
+
+  const { data: weekData } = await supabase
+    .from('registros')
+    .select('empleado_id, tipo, timestamp')
+    .gte('timestamp', weekStart.toISOString())
+    .order('timestamp', { ascending: false })
+
+  const weekRecs = weekData || []
+
   const tardanzas = weekRecs.filter(function(r) {
     const h = new Date(r.timestamp)
     const prHour = (h.getUTCHours() - 4 + 24) % 24
-    return r.tipo === 'entrada' && prHour >= 9
+    const prMin  = h.getUTCMinutes()
+    return r.tipo === 'entrada' && (prHour > 9 || (prHour === 9 && prMin > 0))
   }).length
 
   const horasPorDia = {}
@@ -184,7 +186,8 @@ export async function getDashboardStats() {
     const diasSet = new Set()
     weekRecs.forEach(function(r) {
       if (r.empleado_id === e.id && r.tipo === 'entrada') {
-        diasSet.add(new Date(r.timestamp).toLocaleDateString())
+        const d = new Date(r.timestamp)
+        diasSet.add(d.toLocaleDateString())
       }
     })
     return { nombre: e.nombre.split(' ')[0], entradas: diasSet.size }
@@ -195,7 +198,7 @@ export async function getDashboardStats() {
     presentesHoy: presentes.size,
     ausentesHoy: emps.length - presentes.size,
     tardanzasSemana: tardanzas,
-    registrosHoy: todayRecs.length,
+    registrosHoy: registros.length,
     horasPorDia: Object.entries(horasPorDia).map(function(entry) {
       return { dia: entry[0], cnt: entry[1] }
     }),
