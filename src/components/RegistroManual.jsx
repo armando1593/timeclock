@@ -21,7 +21,7 @@ export default function RegistroManual() {
     setLoading(true)
     try {
       // Convertir fecha y hora de PR a UTC (sumar 4 horas)
-      const fechaHoraPR = new Date(fecha + 'T' + hora + ':00')
+      const fechaHoraUTC = new Date(fecha + 'T' + hora + ':00:00-04:00')
       const fechaHoraUTC = new Date(fechaHoraPR.getTime() + 4 * 60 * 60 * 1000)
 
       await insertarRegistro({
