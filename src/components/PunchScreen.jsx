@@ -76,7 +76,7 @@ export default function PunchScreen() {
     setLoading(true); setGeoError(null)
     try {
       const geo = await getGeofencing()
-      if (geo.activo && gps) {
+      if (geo.activo && gps && !empleado.geofencing_exento) {
         const dist = distanciaMetros(gps.lat, gps.lng, Number(geo.latitud), Number(geo.longitud))
         if (dist > geo.radio_m) {
           setGeoError(`Fuera del área (${Math.round(dist)}m, máximo ${geo.radio_m}m)`)

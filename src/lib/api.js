@@ -7,7 +7,7 @@ export async function getEmpleados() {
 }
 
 export async function verificarPin(pin) {
-  const { data, error } = await supabase.from('empleados').select('id, nombre, departamento, horas_meta').eq('pin_hash', pin).eq('activo', true).single()
+  const { data, error } = await supabase.from('empleados')..select('id, nombre, departamento, horas_meta, geofencing_exento').eq('pin_hash', pin).eq('activo', true).single()
   if (error || !data) return null
   return data
 }
