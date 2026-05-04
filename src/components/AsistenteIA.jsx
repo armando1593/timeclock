@@ -91,11 +91,11 @@ Sé profesional pero amigable. Usa emojis ocasionalmente.
 
 DATOS ACTUALES (${ctx.fecha}, ${ctx.hora}):
 - Total empleados: ${ctx.totalEmpleados}
-- Empleados: ${JSON.stringify(ctx.empleados)}
+- Empleados: ${ctx.empleados.map(e => e.nombre + ' (' + e.departamento + ')').join(', ')}
 - Presentes hoy: ${ctx.presentesHoy}
 - Ausentes hoy: ${ctx.ausentesHoy.length > 0 ? ctx.ausentesHoy.join(', ') : 'Ninguno'}
 - Tardanzas hoy: ${ctx.tardanzasHoy.length > 0 ? JSON.stringify(ctx.tardanzasHoy) : 'Ninguna'}
-- Tardanzas esta semana: ${JSON.stringify(ctx.tardanzasSemana)}
+- Horas por empleado esta semana: ${JSON.stringify(ctx.horasPorEmpleadoSemana)}
 - Horas por empleado esta semana: ${JSON.stringify(ctx.horasPorEmpleadoSemana)}
 - Vacaciones pendientes: ${JSON.stringify(ctx.vacacionesPendientes)}`
 
