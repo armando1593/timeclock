@@ -24,7 +24,7 @@ export default function AlertsScreen({ onNotifCount }) {
       const hoy = new Date(); hoy.setHours(0,0,0,0)
       const recs = await getRegistros({ desde: hoy.toISOString() })
       const [lh, lm] = (config.hora_limite ?? '09:00').slice(0,5).split(':').map(Number)
-      const limite = new Date(); limite.setHours(lh, lm, 0, 0)
+      const limite = new Date(); limite.setUTCHours(lh + 4, lm, 0, 0)
 
       const nuevasAlertas = []
       emps.forEach(emp => {
