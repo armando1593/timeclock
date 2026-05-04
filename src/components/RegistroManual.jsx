@@ -19,7 +19,10 @@ export default function RegistroManual() {
     if (!empleadoId) { setMsg({ text: 'Selecciona un empleado', type: 'error' }); return }
     setLoading(true)
     try {
-      const timestampPR = fecha + 'T' + hora + ':00-04:00'
+      const [h, m] = hora.split(':').map(Number)
+      const fechaObj = new Date(fecha + 'T00:00:00Z')
+      fechaObj.setUTCHours(h + 4, m, 0, 0)
+      const timestampPR = fechaObj.toISOString()
       await insertarRegistro({
         empleado_id: empleadoId,
         tipo,
