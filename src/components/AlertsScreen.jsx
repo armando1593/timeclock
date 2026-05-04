@@ -30,7 +30,7 @@ export default function AlertsScreen({ onNotifCount }) {
       const nuevasAlertas = []
       emps.forEach(emp => {
         const entradasEmp = recs.filter(r => r.empleados?.id === emp.id && r.tipo === 'entrada')
-        const punchIn = entradasEmp.length > 0 ? entradasEmp[0] : null
+        const punchIn = entradasEmp.length > 0 ? entradasEmp.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp))[0] : null
         if (!punchIn) {
           nuevasAlertas.push({ tipo: 'ausente', nombre: emp.nombre, dept: emp.departamento, hora: null })
         } else {

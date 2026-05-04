@@ -17,8 +17,10 @@ export async function updateEmpleado(id, updates) {
   if (error) throw error
 }
 
-export async function insertarRegistro({ empleado_id, tipo, latitud, longitud, foto_url }) {
-  const { data, error } = await supabase.from('registros').insert({ empleado_id, tipo, latitud, longitud, foto_url }).select().single()
+export async function insertarRegistro({ empleado_id, tipo, latitud, longitud, foto_url, timestamp }) {
+  const registro = { empleado_id, tipo, latitud, longitud, foto_url }
+  if (timestamp) registro.timestamp = timestamp
+  const { data, error } = await supabase.from('registros').insert(registro).select().single()
   if (error) throw error
   return data
 }
