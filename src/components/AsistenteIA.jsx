@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { getRegistros, getEmpleados, getVacaciones } from '../lib/api'
 
 // ⚠️ Reemplaza con tu nueva clave de Groq después de borrar la anterior
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const GROQ_API_KEY = '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'
 const GROQ_MODEL   = 'llama-3.1-8b-instant'
 
 const SUGERENCIAS = [
