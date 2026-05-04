@@ -23,6 +23,7 @@ export default function AlertsScreen({ onNotifCount }) {
       const [emps, config] = await Promise.all([getEmpleados(), getConfiguracion()])
       const hoy = new Date(); hoy.setUTCHours(4,0,0,0)
       const recs = await getRegistros({ desde: hoy.toISOString() })
+        recs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
       const [lh, lm] = (config.hora_limite ?? '09:00').slice(0,5).split(':').map(Number)
       const limite = new Date(); limite.setUTCHours(lh + 4, lm, 1, 0)
 
