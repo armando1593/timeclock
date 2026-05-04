@@ -16,33 +16,44 @@ export default function AlertsScreen({ onNotifCount }) {
     checkTardanzas()
   }, [])
 
-  useEffect(() => { onNotifCount?.(alertas.length) }, [alertas])
+  useEffect(() => { onNotifCount && onNotifCount(alertas.length) }, [alertas])
 
   async function checkTardanzas() {
     try {
       const [emps, config] = await Promise.all([getEmpleados(), getConfiguracion()])
-      const hoy = new Date(); hoy.setUTCHours(4,0,0,0)
+      const hoy = new Date()
+      hoy.setUTCHours(4, 0, 0, 0)
+
       const recs = await getRegistros({ desde: hoy.toISOString() })
-        recs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
       const [lh, lm] = (config.hora_limite ?? '09:00').slice(0,5).split(':').map(Number)
-      const limite = new Date(); limite.setUTCHours(lh + 4, lm, 1, 0)
+      const limite = new Date()
+      limite.setUTCHours(lh + 4, lm, 1, 0)
 
       const nuevasAlertas = []
       emps.forEach(emp => {
-        const entradasEmp = recs.filter(r => r.empleados?.id === emp.id && r.tipo === 'entrada')
-        const punchIn = entradasEmp.length > 0 ? entradasEmp.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp))[0] : null
-        if (!punchIn) {
+        const todasEntradas = recs
+          .filter(r => r.empleados?.id === emp.id && r.tipo === 'entrada')
+          .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+
+        const primeraEntrada = todasEntradas.length > 0 ? todasEntradas[0] : null
+
+        if (!primeraEntrada) {
           nuevasAlertas.push({ tipo: 'ausente', nombre: emp.nombre, dept: emp.departamento, hora: null })
         } else {
-          const t = new Date(punchIn.timestamp)
+          const t = new Date(primeraEntrada.timestamp)
           if (t > limite) {
-            nuevasAlertas.push({ tipo: 'tarde', nombre: emp.nombre, dept: emp.departamento,
-              hora: t.toLocaleTimeString('es-PR', { hour:'2-digit', minute:'2-digit' }) })
+            nuevasAlertas.push({
+              tipo: 'tarde',
+              nombre: emp.nombre,
+              dept: emp.departamento,
+              hora: t.toLocaleTimeString('es-PR', { hour: '2-digit', minute: '2-digit' })
+            })
           }
         }
       })
       setAlertas(nuevasAlertas)
-    } catch (e) { console.error(e) }
+    } catch(e) { console.error(e) }
   }
 
   async function saveConfig() {
@@ -50,7 +61,7 @@ export default function AlertsScreen({ onNotifCount }) {
     try {
       await updateConfiguracion({ hora_limite: horaLimite + ':00', email_alertas: emailAdmin })
       setSaved(true); setTimeout(() => setSaved(false), 2000)
-    } catch (e) { console.error(e) }
+    } catch(e) { console.error(e) }
     finally { setSaving(false) }
   }
 
@@ -59,18 +70,18 @@ export default function AlertsScreen({ onNotifCount }) {
       <h2 className="screen-title">Alertas y notificaciones</h2>
 
       <div className="config-card">
-        <div className="config-title">Configuración de alertas</div>
-        <label className="field-label">Hora límite de entrada</label>
+        <div className="config-title">Configuracion de alertas</div>
+        <label className="field-label">Hora limite de entrada</label>
         <input type="time" value={horaLimite} onChange={e => setHoraLimite(e.target.value)} className="time-input" />
-        <label className="field-label" style={{ marginTop: 12 }}>Email para alertas</label>
+        <label className="field-label" style={{marginTop:12}}>Email para alertas</label>
         <input type="email" value={emailAdmin} onChange={e => setEmailAdmin(e.target.value)}
           placeholder="admin@empresa.com" className="text-input" />
         <button className="save-btn" onClick={saveConfig} disabled={saving}>
-          {saving ? 'Guardando...' : saved ? 'Guardado ✓' : 'Guardar configuración'}
+          {saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar configuracion'}
         </button>
       </div>
 
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: 8 }}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
         <div className="section-title">Alertas de hoy</div>
         <button className="check-btn" onClick={checkTardanzas}>Verificar ahora</button>
       </div>
@@ -80,19 +91,17 @@ export default function AlertsScreen({ onNotifCount }) {
       ) : (
         <div className="alerts-list">
           {alertas.map((a, i) => (
-            <div key={i} className={`alert-item alert-${a.tipo}`}>
-              <div className={`alert-icon ${a.tipo}`}>
-                {a.tipo === 'tarde' ? '!' : '?'}
-              </div>
+            <div key={i} className={"alert-item alert-" + a.tipo}>
+              <div className={"alert-icon " + a.tipo}>{a.tipo === 'tarde' ? '!' : '?'}</div>
               <div className="alert-info">
                 <div className="alert-name">{a.nombre}</div>
                 <div className="alert-desc">
                   {a.tipo === 'tarde'
-                    ? `Llegó tarde — ponchó a las ${a.hora}`
+                    ? 'Llego tarde — poncho a las ' + a.hora
                     : 'No ha ponchado entrada hoy'}
                 </div>
               </div>
-              <span className={`alert-badge ${a.tipo}`}>
+              <span className={"alert-badge " + a.tipo}>
                 {a.tipo === 'tarde' ? 'Tardanza' : 'Ausente'}
               </span>
             </div>

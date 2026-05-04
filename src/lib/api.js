@@ -133,24 +133,22 @@ export async function getDashboardStats() {
   const now = new Date()
   const emps = await getEmpleados()
 
-  // Usar SQL directo con timezone de PR para obtener registros de hoy
-  const { data: todayRecs } = await supabase
+  const todayUTC = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0')
+
+  const { data: todayData } = await supabase
     .from('registros')
     .select('empleado_id, tipo, timestamp')
-    .gte('timestamp', now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0') + 'T04:00:00.000Z')
+    .gte('timestamp', todayUTC + 'T04:00:00.000Z')
     .order('timestamp', { ascending: true })
 
-  const registros = todayRecs || []
+  const registros = todayData || []
 
-  // Para cada empleado, encontrar su ultimo registro de hoy
   const presentes = new Set()
   emps.forEach(function(e) {
     const misRegistros = registros.filter(function(r) { return r.empleado_id === e.id })
     if (misRegistros.length === 0) return
     const ultimo = misRegistros[misRegistros.length - 1]
-    if (ultimo.tipo === 'entrada') {
-      presentes.add(e.id)
-    }
+    if (ultimo.tipo === 'entrada') presentes.add(e.id)
   })
 
   const weekStart = new Date(now)
@@ -188,8 +186,7 @@ export async function getDashboardStats() {
     const diasSet = new Set()
     weekRecs.forEach(function(r) {
       if (r.empleado_id === e.id && r.tipo === 'entrada') {
-        const d = new Date(r.timestamp)
-        diasSet.add(d.toLocaleDateString())
+        diasSet.add(new Date(r.timestamp).toLocaleDateString())
       }
     })
     return { nombre: e.nombre.split(' ')[0], entradas: diasSet.size }
