@@ -139,7 +139,7 @@ export async function getDashboardStats() {
   const todayResult = await supabase
     .from('registros')
     .select('empleado_id, tipo, timestamp')
-    .gte('timestamp', hoy + 'T04:00:00.000Z')
+    new Date(new Date().toISOString().split('T')[0] + 'T04:00:00.000Z').toISOString()
     .order('timestamp', { ascending: false })
   const todayRecs = todayResult.data || []
 
