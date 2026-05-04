@@ -22,7 +22,7 @@ function calcularContribucion(brutoQuincenal) {
 function calcularDeducciones(bruto) {
   const fica     = Math.round(bruto * TASAS.FICA     * 100) / 100
   const medicare = Math.round(bruto * TASAS.MEDICARE * 100) / 100
-  const contrib  = Math.round(calcularContribucion(bruto) * 100) / 100
+  const contrib  = 0
   const totalDed = Math.round((fica + medicare + contrib) * 100) / 100
   const neto     = Math.round((bruto - totalDed) * 100) / 100
   return { fica, medicare, contrib, totalDed, neto }
@@ -208,7 +208,7 @@ if (!isAdmin) {
                 <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
                 <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
                 <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
-                <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>
+                
                 <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
               </div>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,padding:'10px 12px',background:'#E1F5EE',borderRadius:'8px'}}>
