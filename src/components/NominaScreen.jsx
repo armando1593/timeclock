@@ -233,6 +233,12 @@ if (!isAdmin) {
           )
         })}
       </div>
+<button className="abtn" style={{marginTop:8,width:'100%',padding:13,borderRadius:'var(--border-radius-lg)',background:'#1D7A35',color:'white',border:'none',fontSize:15,fontWeight:500,cursor:'pointer',fontFamily:'var(--font)'}} onClick={function(){
+  var headers='Empleado,Departamento,Hrs Reg,Hrs Extra,Tarifa,Bruto,FICA,Medicare,Total Ded,Neto\n'
+  var rows=nomina.map(function(e){var b=e.salarioTotal||0,f=Math.round(b*0.062*100)/100,m=Math.round(b*0.0145*100)/100,d=Math.round((f+m)*100)/100,n=Math.round((b-d)*100)/100;return [e.nombre,e.departamento,e.horasReg,e.horasExtra,(e.tarifa_hora||0).toFixed(2),b.toFixed(2),f.toFixed(2),m.toFixed(2),d.toFixed(2),n.toFixed(2)].join(',')}).join('\n')
+  var blob=new Blob(['\uFEFF'+headers+rows],{type:'text/csv;charset=utf-8;'})
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='nomina_'+new Date().toISOString().split('T')[0]+'.csv';a.click()
+}}>Exportar Excel (.csv) ↗</button>
       <button className="abtn btn-in" style={{marginTop:16}} onClick={exportPDF}>Exportar PDF con deducciones</button>
     </div>
   )
