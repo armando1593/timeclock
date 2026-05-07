@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import PunchScreen from './components/PunchScreen'
-import ReportsScreen from './components/ReportsScreen'
+import AdminScreen from './components/AdminScreen'
 import VacacionesScreen from './components/VacacionesScreen'
 import NominaScreen from './components/NominaScreen'
 import './index.css'
@@ -17,7 +17,7 @@ export default function AppEmpleado() {
 
   const screens = {
     punch:      <PunchScreen />,
-    registros:  <ReportsScreen empleadoMode />,
+    registros:  <AdminScreen isAdmin={false} />,
     nomina:     <NominaScreen isAdmin={false} />,
     vacaciones: <VacacionesScreen isAdmin={false} />,
   }
