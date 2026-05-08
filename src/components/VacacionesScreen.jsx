@@ -35,7 +35,7 @@ export default function VacacionesScreen({ isAdmin }) {
     if (!form.fecha_inicio || !form.fecha_fin) { setMsg({ text: 'Selecciona las fechas', type: 'error' }); return }
     if (new Date(form.fecha_fin) < new Date(form.fecha_inicio)) { setMsg({ text: 'La fecha fin debe ser despues del inicio', type: 'error' }); return }
     try {
-      await solicitarVacaciones({ empleado_id: empleado.id, ...form })
+     await solicitarVacaciones({ empleado_id: empleado.id, fecha_inicio: form.fecha_inicio + 'T12:00:00', fecha_fin: form.fecha_fin + 'T12:00:00', motivo: form.motivo })
       setMsg({ text: 'Solicitud enviada! El administrador la revisara pronto.', type: 'ok' })
       setForm({ fecha_inicio:'', fecha_fin:'', motivo:'' })
       const vacs = await getVacaciones({ empleado_id: empleado.id })
