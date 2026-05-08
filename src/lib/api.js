@@ -111,8 +111,8 @@ export async function calcularNomina(desde, hasta) {
     })
     if (lastIn) horas += (Date.now() - lastIn) / 3600000
     const tarifa = emp.tarifa_hora || 0
-    const horasReg = Math.min(horas, 40)
-    const horasExtra = Math.max(0, horas - 40)
+    const horasReg = Math.min(horas, 80)
+    const horasExtra = Math.max(0, horas - 80)
     return {
       id: emp.id,
       nombre: emp.nombre,
