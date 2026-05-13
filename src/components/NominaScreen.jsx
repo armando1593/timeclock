@@ -20,7 +20,7 @@ function calcularContribucion(brutoQuincenal) {
 }
 
 function calcularDeducciones(bruto) {
-  const fica     = Math.round(bruto * TASAS.FICA     * 100) / 100
+  const fica     = 0
   const medicare = Math.round(bruto * TASAS.MEDICARE * 100) / 100
   const contrib  = 0
   const totalDed = Math.round((fica + medicare + contrib) * 100) / 100
