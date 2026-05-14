@@ -166,8 +166,7 @@ if (!isAdmin) {
            <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
                 <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
                 {ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
-            <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
-            <div className="nomina-row"><span>Contribución PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>
+            
             <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
           </div>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,padding:'12px',background:'#E1F5EE',borderRadius:'8px'}}>
