@@ -6,23 +6,10 @@ const TASAS = {
   MEDICARE: 0.0145,
 }
 
-function calcularContribucion(brutoQuincenal) {
-  const anual = brutoQuincenal * 24
-  const exencion = 4500
-  const cobrable = Math.max(0, anual - exencion)
-  let contrib = 0
-  if (cobrable <= 9000)       contrib = cobrable * 0.07
-  else if (cobrable <= 25000) contrib = 630  + (cobrable - 9000)  * 0.14
-  else if (cobrable <= 41500) contrib = 2870 + (cobrable - 25000) * 0.25
-  else if (cobrable <= 61500) contrib = 7000 + (cobrable - 41500) * 0.33
-  else                        contrib = 13600 + (cobrable - 61500) * 0.337
-  return Math.max(0, contrib / 24)
-}
-
 function calcularDeducciones(bruto, contribucionPR) {
   const fica     = 0
   const medicare = Math.round(bruto * TASAS.MEDICARE * 100) / 100
-  const contrib  = Math.round((contribucionPR || 0) * 100) / 100  
+  const contrib  = Math.round((contribucionPR || 0) * 100) / 100
   const totalDed = Math.round((fica + medicare + contrib) * 100) / 100
   const neto     = Math.round((bruto - totalDed) * 100) / 100
   return { fica, medicare, contrib, totalDed, neto }
@@ -33,8 +20,12 @@ export default function NominaScreen({ isAdmin }) {
   const [loading,  setLoading]  = useState(false)
   const [editId,   setEditId]   = useState(null)
   const [editRate, setEditRate] = useState('')
+  const [pin,      setPin]      = useState('')
+  const [empleado, setEmpleado] = useState(null)
+  const [pinError, setPinError] = useState('')
+  const [miNomina, setMiNomina] = useState(null)
 
-  useEffect(() => { loadNomina() }, [])
+  useEffect(function() { loadNomina() }, [])
 
   async function loadNomina() {
     setLoading(true)
@@ -94,90 +85,86 @@ export default function NominaScreen({ isAdmin }) {
     setTimeout(function(){ w.print() }, 500)
   }
 
+  const KEYS = ['1','2','3','4','5','6','7','8','9','←','0','✓']
+
+  async function verificarPinEmp(p) {
+    const { verificarPin } = await import('../lib/api')
+    const emp = await verificarPin(p)
+    setPin('')
+    if (!emp) { setPinError('PIN incorrecto'); return }
+    setPinError('')
+    setEmpleado(emp)
+    const datos = nomina.find(function(n){ return n.id === emp.id })
+    setMiNomina(datos)
+  }
+
+  if (!isAdmin) {
+    if (!empleado) return (
+      <div className="punch-screen">
+        <header className="punch-header">
+          <div className="date-line">Mi nomina quincenal</div>
+          <div style={{fontSize:14,color:'var(--gray-500)',marginTop:4}}>Ingresa tu PIN para ver tu pago</div>
+        </header>
+        <div className="pin-card">
+          <p className="pin-label">Tu PIN de 4 digitos</p>
+          <div className="pin-dots">
+            {[0,1,2,3].map(function(i){ return <div key={i} className={'pin-dot ' + (i<pin.length?'filled':'')} /> })}
+          </div>
+          <div className="pin-grid">
+            {KEYS.map(function(k){ return (
+              <button key={k} className={'pin-key ' + (k==='✓'?'pin-confirm':k==='←'?'pin-del':'')}
+                onClick={function() {
+                  if (k==='←') { setPin(function(p){ return p.slice(0,-1) }); return }
+                  if (k==='✓') { verificarPinEmp(pin); return }
+                  if (pin.length<4) { var np=pin+k; setPin(np); if(np.length===4) setTimeout(function(){ verificarPinEmp(np) },200) }
+                }}>{k}</button>
+            )})}
+          </div>
+          {pinError && <div className="msg msg-error">{pinError}</div>}
+        </div>
+      </div>
+    )
+
+    const ded = miNomina ? calcularDeducciones(miNomina.salarioTotal||0, miNomina.contribucion_pr||0) : null
+    return (
+      <div className="nomina-screen">
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+          <div className="emp-avatar">{empleado.nombre.split(' ').map(function(w){return w[0]}).slice(0,2).join('')}</div>
+          <div><div className="emp-name">{empleado.nombre}</div><div className="emp-dept">{empleado.departamento}</div></div>
+          <button onClick={function(){setEmpleado(null);setMiNomina(null);setPinError('')}}
+            style={{marginLeft:'auto',fontSize:12,padding:'4px 10px',borderRadius:8,border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',cursor:'pointer',color:'var(--gray-500)'}}>
+            Salir
+          </button>
+        </div>
+        {!miNomina ? (
+          <div className="empty-state">No hay datos de nomina para este periodo</div>
+        ) : (
+          <div className="nomina-card">
+            <div className="nomina-rows">
+              <div className="nomina-row"><span>Horas regulares</span><span>{miNomina.horasReg}h x ${(miNomina.tarifa_hora||0).toFixed(2)} = ${(miNomina.salarioReg||0).toFixed(2)}</span></div>
+              {miNomina.horasExtra > 0 && <div className="nomina-row accent"><span>Horas extra (x1.5)</span><span>{miNomina.horasExtra}h = ${(miNomina.salarioExtra||0).toFixed(2)}</span></div>}
+              <div className="nomina-row" style={{fontWeight:500}}><span>Salario bruto</span><span>${(miNomina.salarioTotal||0).toFixed(2)}</span></div>
+            </div>
+            <div className="nomina-rows" style={{marginTop:6,background:'#FFF5F5'}}>
+              <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
+              <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
+              <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
+              {ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
+              <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,padding:'12px',background:'#E1F5EE',borderRadius:'8px'}}>
+              <span style={{fontSize:15,fontWeight:500,color:'#0F6E56'}}>Tu pago neto</span>
+              <span style={{fontSize:22,fontWeight:700,color:'#0F6E56'}}>${ded.neto.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const totalBruto = nomina.reduce(function(s,e){ return s+(e.salarioTotal||0) }, 0)
-  const totalNeto  = nomina.reduce(function(s,e){ const d=calcularDeducciones(e.salarioTotal||0); return s+d.neto }, 0)
-const [pin,      setPin]      = useState('')
-const [empleado, setEmpleado] = useState(null)
-const [pinError, setPinError] = useState('')
-const [miNomina, setMiNomina] = useState(null)
+  const totalNeto  = nomina.reduce(function(s,e){ var d=calcularDeducciones(e.salarioTotal||0,e.contribucion_pr||0); return s+d.neto }, 0)
 
-const KEYS = ['1','2','3','4','5','6','7','8','9','←','0','✓']
-
-async function verificarPinEmp(p) {
-  const { verificarPin } = await import('../lib/api')
-  const emp = await verificarPin(p)
-  setPin('')
-  if (!emp) { setPinError('PIN incorrecto'); return }
-  setPinError('')
-  setEmpleado(emp)
-  const datos = nomina.find(n => n.id === emp.id)
-  setMiNomina(datos)
-}
-
-if (!isAdmin) {
-  if (!empleado) return (
-    <div className="punch-screen">
-      <header className="punch-header">
-        <div className="date-line">Mi nómina quincenal</div>
-        <div style={{fontSize:14,color:'var(--gray-500)',marginTop:4}}>Ingresa tu PIN para ver tu pago</div>
-      </header>
-      <div className="pin-card">
-        <p className="pin-label">Tu PIN de 4 dígitos</p>
-        <div className="pin-dots">
-          {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${i<pin.length?'filled':''}`} />)}
-        </div>
-        <div className="pin-grid">
-          {KEYS.map(k => (
-            <button key={k} className={`pin-key ${k==='✓'?'pin-confirm':k==='←'?'pin-del':''}`}
-              onClick={() => {
-                if (k==='←') { setPin(p=>p.slice(0,-1)); return }
-                if (k==='✓') { verificarPinEmp(pin); return }
-                if (pin.length<4) { const np=pin+k; setPin(np); if(np.length===4) setTimeout(()=>verificarPinEmp(np),200) }
-              }}>{k}</button>
-          ))}
-        </div>
-        {pinError && <div className="msg msg-error">{pinError}</div>}
-      </div>
-    </div>
-  )
-
-  const ded = miNomina ? calcularDeducciones(miNomina.salarioTotal||0) : null
-  return (
-    <div className="nomina-screen">
-      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
-        <div className="emp-avatar">{empleado.nombre.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
-        <div><div className="emp-name">{empleado.nombre}</div><div className="emp-dept">{empleado.departamento}</div></div>
-        <button onClick={()=>{setEmpleado(null);setMiNomina(null);setPinError('')}}
-          style={{marginLeft:'auto',fontSize:12,padding:'4px 10px',borderRadius:8,border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',cursor:'pointer',color:'var(--gray-500)'}}>
-          Salir
-        </button>
-      </div>
-      {!miNomina ? (
-        <div className="empty-state">No hay datos de nómina para este período</div>
-      ) : (
-        <div className="nomina-card">
-          <div className="nomina-rows">
-            <div className="nomina-row"><span>Horas regulares</span><span>{miNomina.horasReg}h × ${(miNomina.tarifa_hora||0).toFixed(2)} = ${(miNomina.salarioReg||0).toFixed(2)}</span></div>
-            {miNomina.horasExtra > 0 && <div className="nomina-row accent"><span>Horas extra (×1.5)</span><span>{miNomina.horasExtra}h = ${(miNomina.salarioExtra||0).toFixed(2)}</span></div>}
-            <div className="nomina-row" style={{fontWeight:500}}><span>Salario bruto</span><span>${(miNomina.salarioTotal||0).toFixed(2)}</span></div>
-          </div>
-          <div className="nomina-rows" style={{marginTop:6,background:'#FFF5F5'}}>
-            <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
-           <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
-                <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
-                {ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
-            
-            <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
-          </div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,padding:'12px',background:'#E1F5EE',borderRadius:'8px'}}>
-            <span style={{fontSize:15,fontWeight:500,color:'#0F6E56'}}>💰 Tu pago neto</span>
-            <span style={{fontSize:22,fontWeight:700,color:'#0F6E56'}}>${ded.neto.toFixed(2)}</span>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
   return (
     <div className="nomina-screen">
       <h2 className="screen-title">Nomina quincenal</h2>
@@ -186,7 +173,7 @@ if (!isAdmin) {
         <div className="stat-card"><div className="stat-lbl">Neto total</div><div className="stat-val" style={{color:'#1D9E75'}}>${totalNeto.toFixed(2)}</div></div>
       </div>
       <div style={{background:'#FAEEDA',borderRadius:'8px',padding:'10px 14px',marginBottom:14,fontSize:12,color:'#633806'}}>
-        Deducciones: FICA 6.2% + Medicare 1.45% + Contribucion PR (Hacienda 2024)
+        Deducciones: Medicare 1.45% + Contribucion PR (cuando aplica)
       </div>
       {loading && <div className="loading-bar" />}
       <div className="nomina-list">
@@ -207,12 +194,9 @@ if (!isAdmin) {
               </div>
               <div className="nomina-rows" style={{marginTop:6,background:'#FFF5F5'}}>
                 <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
-               <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
+                <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
                 <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
                 {ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
-                <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
-{ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
-                
                 <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
               </div>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:10,padding:'10px 12px',background:'#E1F5EE',borderRadius:'8px'}}>
@@ -237,13 +221,17 @@ if (!isAdmin) {
           )
         })}
       </div>
-<button className="abtn" style={{marginTop:8,width:'100%',padding:13,borderRadius:'var(--border-radius-lg)',background:'#1D7A35',color:'white',border:'none',fontSize:15,fontWeight:500,cursor:'pointer',fontFamily:'var(--font)'}} onClick={function(){
-  var headers='Empleado,Departamento,Hrs Reg,Hrs Extra,Tarifa,Bruto,FICA,Medicare,Total Ded,Neto\n'
-  var rows=nomina.map(function(e){var b=e.salarioTotal||0,f=Math.round(b*0)/100,m=Math.round(b*0.0145*100)/100,d=Math.round((f+m)*100)/100,n=Math.round((b-d)*100)/100;return [e.nombre,e.departamento,e.horasReg,e.horasExtra,(e.tarifa_hora||0).toFixed(2),b.toFixed(2),f.toFixed(2),m.toFixed(2),d.toFixed(2),n.toFixed(2)].join(',')}).join('\n')
-  var blob=new Blob(['\uFEFF'+headers+rows],{type:'text/csv;charset=utf-8;'})
-  var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='nomina_'+new Date().toISOString().split('T')[0]+'.csv';a.click()
-}}>Exportar Excel (.csv) ↗</button>
-      <button className="abtn btn-in" style={{marginTop:16}} onClick={exportPDF}>Exportar PDF con deducciones</button>
+      <button className="abtn" style={{marginTop:8,width:'100%',padding:13,borderRadius:12,background:'#1D7A35',color:'white',border:'none',fontSize:15,fontWeight:500,cursor:'pointer',fontFamily:'var(--font)'}} onClick={function(){
+        var headers='Empleado,Departamento,Hrs Reg,Hrs Extra,Tarifa,Bruto,FICA,Medicare,Contrib PR,Total Ded,Neto\n'
+        var rows=nomina.map(function(e){
+          var b=e.salarioTotal||0
+          var d=calcularDeducciones(b,e.contribucion_pr||0)
+          return [e.nombre,e.departamento,e.horasReg,e.horasExtra,(e.tarifa_hora||0).toFixed(2),b.toFixed(2),d.fica.toFixed(2),d.medicare.toFixed(2),d.contrib.toFixed(2),d.totalDed.toFixed(2),d.neto.toFixed(2)].join(',')
+        }).join('\n')
+        var blob=new Blob(['\uFEFF'+headers+rows],{type:'text/csv;charset=utf-8;'})
+        var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='nomina_'+new Date().toISOString().split('T')[0]+'.csv';a.click()
+      }}>Exportar Excel (.csv)</button>
+      <button className="abtn btn-in" style={{marginTop:8}} onClick={exportPDF}>Exportar PDF con deducciones</button>
     </div>
   )
 }
