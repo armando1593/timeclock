@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { getEmpleados, updateEmpleado } from '../lib/api'
 import { supabase } from '../lib/supabase'
 
-const EMPTY_FORM = { nombre:'', departamento:'', pin_hash:'', horas_meta:8, tarifa_hora:0 }
-
+const EMPTY_FORM = { nombre:'', departamento:'', pin_hash:'', horas_meta:8, tarifa_hora:0, contribucion_pr:0 }
 export default function EmpleadosScreen() {
   const [empleados, setEmpleados] = useState([])
   const [loading,   setLoading]   = useState(false)
@@ -41,6 +40,7 @@ export default function EmpleadosScreen() {
       pin_hash: emp.pin_hash,
       horas_meta: emp.horas_meta || 8,
       tarifa_hora: emp.tarifa_hora || 0,
+      contribucion_pr: emp.contribucion_pr || 0,
     })
     setMsg(null)
     setSeccion('form')
@@ -62,6 +62,7 @@ export default function EmpleadosScreen() {
           pin_hash: form.pin_hash,
           horas_meta: parseFloat(form.horas_meta) || 8,
           tarifa_hora: parseFloat(form.tarifa_hora) || 0,
+          contribucion_pr: parseFloat(form.contribucion_pr) || 0,
         }).eq('id', editEmp.id)
         setMsg({ text: 'Empleado actualizado correctamente', type: 'ok' })
       } else {
@@ -200,6 +201,13 @@ export default function EmpleadosScreen() {
                 onChange={function(e){setForm(function(f){return {...f,tarifa_hora:e.target.value}})}}
                 className="text-input" />
             </div>
+<div>
+  <label className="field-label">Contribución PR ($)</label>
+  <input type="number" value={form.contribucion_pr} min={0} step={0.01}
+    onChange={function(e){setForm(function(f){return {...f,contribucion_pr:e.target.value}})}}
+    className="text-input" placeholder="0.00" />
+</div>
+
           </div>
 
           {msg && <div className={"msg msg-" + msg.type}>{msg.text}</div>}
