@@ -70,7 +70,7 @@ export default function NominaScreen({ isAdmin }) {
     const fecha = now.toLocaleDateString('es-PR',{year:'numeric',month:'long',day:'numeric'})
 
     const rows = nomina.map(function(emp) {
-      const ded = calcularDeducciones(emp.salarioTotal || 0)
+      const ded = calcularDeducciones(emp.salarioTotal || 0, emp.contribucion_pr || 0)
       return '<tr><td>' + emp.nombre + '</td><td>' + emp.departamento + '</td><td>' + emp.horasReg + 'h</td><td>' + (emp.horasExtra > 0 ? emp.horasExtra+'h' : '-') + '</td><td>$' + (emp.tarifa_hora||0).toFixed(2) + '</td><td class="num">$' + (emp.salarioTotal||0).toFixed(2) + '</td><td class="num">$' + ded.fica.toFixed(2) + '</td><td class="num">$' + ded.medicare.toFixed(2) + '</td><td class="num">$' + ded.contrib.toFixed(2) + '</td><td class="num ded">$' + ded.totalDed.toFixed(2) + '</td><td class="num neto">$' + ded.neto.toFixed(2) + '</td></tr>'
     }).join('')
 
