@@ -163,7 +163,9 @@ if (!isAdmin) {
           </div>
           <div className="nomina-rows" style={{marginTop:6,background:'#FFF5F5'}}>
             <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
-            <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
+           <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
+                <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
+                {ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
             <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
             <div className="nomina-row"><span>Contribución PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>
             <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
@@ -206,8 +208,11 @@ if (!isAdmin) {
               </div>
               <div className="nomina-rows" style={{marginTop:6,background:'#FFF5F5'}}>
                 <div className="section-title" style={{marginBottom:6}}>Deducciones</div>
-                <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
+               <div className="nomina-row"><span>FICA (6.2%)</span><span style={{color:'#D85A30'}}>-${ded.fica.toFixed(2)}</span></div>
                 <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
+                {ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
+                <div className="nomina-row"><span>Medicare (1.45%)</span><span style={{color:'#D85A30'}}>-${ded.medicare.toFixed(2)}</span></div>
+{ded.contrib > 0 && <div className="nomina-row"><span>Contribucion PR</span><span style={{color:'#D85A30'}}>-${ded.contrib.toFixed(2)}</span></div>}
                 
                 <div className="nomina-row" style={{fontWeight:500}}><span>Total deducciones</span><span style={{color:'#D85A30'}}>-${ded.totalDed.toFixed(2)}</span></div>
               </div>
