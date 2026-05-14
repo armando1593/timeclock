@@ -19,10 +19,10 @@ function calcularContribucion(brutoQuincenal) {
   return Math.max(0, contrib / 24)
 }
 
-function calcularDeducciones(bruto) {
+function calcularDeducciones(bruto, contribucionPR) {
   const fica     = 0
   const medicare = Math.round(bruto * TASAS.MEDICARE * 100) / 100
-  const contrib  = 0
+  const contrib  = Math.round((contribucionPR || 0) * 100) / 100  
   const totalDed = Math.round((fica + medicare + contrib) * 100) / 100
   const neto     = Math.round((bruto - totalDed) * 100) / 100
   return { fica, medicare, contrib, totalDed, neto }
@@ -76,7 +76,7 @@ export default function NominaScreen({ isAdmin }) {
 
     const totalBruto = nomina.reduce(function(s,e){ return s+(e.salarioTotal||0) }, 0)
     const totales = nomina.reduce(function(s,e) {
-      const d = calcularDeducciones(e.salarioTotal||0)
+      const d = calcularDeducciones(e.salarioTotal||0, e.contribucion_pr||0)
       return { fica: s.fica+d.fica, medicare: s.medicare+d.medicare, contrib: s.contrib+d.contrib, totalDed: s.totalDed+d.totalDed, neto: s.neto+d.neto }
     }, { fica:0, medicare:0, contrib:0, totalDed:0, neto:0 })
 
@@ -190,7 +190,7 @@ if (!isAdmin) {
       {loading && <div className="loading-bar" />}
       <div className="nomina-list">
         {nomina.map(function(emp) {
-          const ded = calcularDeducciones(emp.salarioTotal || 0)
+          const ded = calcularDeducciones(emp.salarioTotal || 0, emp.contribucion_pr || 0)
           const ini = emp.nombre ? emp.nombre.split(' ').map(function(w){return w[0]}).slice(0,2).join('') : '?'
           return (
             <div key={emp.id} className="nomina-card">
