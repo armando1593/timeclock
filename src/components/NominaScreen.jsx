@@ -17,11 +17,8 @@ function calcularDeducciones(bruto, contribucionPR) {
 
 export default function NominaScreen({ isAdmin }) {
   const [nomina,      setNomina]      = useState([])
-  const hoy = new Date()
-  const defDesde = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0]
-  const defHasta = new Date(hoy.getFullYear(), hoy.getMonth(), 14).toISOString().split('T')[0]
-  const [periodoDesde, setPeriodoDesde] = useState(defDesde)
-  const [periodoHasta, setPeriodoHasta] = useState(defHasta)
+  const [periodoDesde, setPeriodoDesde] = useState(function(){ return localStorage.getItem('nomina_desde') || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] })
+  const [periodoHasta, setPeriodoHasta] = useState(function(){ return localStorage.getItem('nomina_hasta') || new Date(new Date().getFullYear(), new Date().getMonth(), 14).toISOString().split('T')[0] })
   const [loading,  setLoading]  = useState(false)
   const [editId,   setEditId]   = useState(null)
   const [editRate, setEditRate] = useState('')
@@ -166,12 +163,12 @@ export default function NominaScreen({ isAdmin }) {
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
         <div>
           <label className="field-label">Desde</label>
-          <input type="date" value={periodoDesde} onChange={function(e){setPeriodoDesde(e.target.value)}}
+          <input type="date" value={periodoDesde} onChange={function(e)setPeriodoDesde(e.target.value); localStorage.setItem('nomina_desde', e.target.value)}}
             style={{width:'100%',padding:'8px 10px',borderRadius:'var(--radius-sm)',border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',fontSize:13,fontFamily:'var(--font)',color:'var(--gray-900)'}} />
         </div>
         <div>
           <label className="field-label">Hasta</label>
-          <input type="date" value={periodoHasta} onChange={function(e){setPeriodoHasta(e.target.value)}}
+          <input type="date" value={periodoHasta} onChange={function(e){setPeriodoHasta(e.target.value); localStorage.setItem('nomina_hasta', e.target.value)}}
             style={{width:'100%',padding:'8px 10px',borderRadius:'var(--radius-sm)',border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',fontSize:13,fontFamily:'var(--font)',color:'var(--gray-900)'}} />
         </div>
       </div>
