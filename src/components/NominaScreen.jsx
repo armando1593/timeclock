@@ -163,7 +163,7 @@ export default function NominaScreen({ isAdmin }) {
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
         <div>
           <label className="field-label">Desde</label>
-          <input type="date" value={periodoDesde} onChange={function(e)setPeriodoDesde(e.target.value); localStorage.setItem('nomina_desde', e.target.value)}}
+          <input type="date" value={periodoDesde} onChange={function(e){ setPeriodoDesde(e.target.value); localStorage.setItem('nomina_desde', e.target.value) }}
             style={{width:'100%',padding:'8px 10px',borderRadius:'var(--radius-sm)',border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',fontSize:13,fontFamily:'var(--font)',color:'var(--gray-900)'}} />
         </div>
         <div>
