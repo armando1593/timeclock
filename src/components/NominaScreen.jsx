@@ -46,10 +46,7 @@ export default function NominaScreen({ isAdmin }) {
 
   function exportPDF() {
     const now = new Date()
-    const dia = now.getDate()
-    const periodoLabel = dia <= 15
-      ? '1-15 de ' + now.toLocaleDateString('es-PR',{month:'long',year:'numeric'})
-      : '16-' + new Date(now.getFullYear(),now.getMonth()+1,0).getDate() + ' de ' + now.toLocaleDateString('es-PR',{month:'long',year:'numeric'})
+    const periodoLabel = periodoDesde + ' al ' + periodoHasta
     const fecha = now.toLocaleDateString('es-PR',{year:'numeric',month:'long',day:'numeric'})
 
     const rows = nomina.map(function(emp) {
