@@ -16,7 +16,12 @@ function calcularDeducciones(bruto, contribucionPR) {
 }
 
 export default function NominaScreen({ isAdmin }) {
-  const [nomina,   setNomina]   = useState([])
+  const [nomina,      setNomina]      = useState([])
+  const hoy = new Date()
+  const defDesde = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0]
+  const defHasta = new Date(hoy.getFullYear(), hoy.getMonth(), 14).toISOString().split('T')[0]
+  const [periodoDesde, setPeriodoDesde] = useState(defDesde)
+  const [periodoHasta, setPeriodoHasta] = useState(defHasta)
   const [loading,  setLoading]  = useState(false)
   const [editId,   setEditId]   = useState(null)
   const [editRate, setEditRate] = useState('')
@@ -30,17 +35,7 @@ export default function NominaScreen({ isAdmin }) {
   async function loadNomina() {
     setLoading(true)
     try {
-      const now = new Date()
-      const dia = now.getDate()
-      let desde, hasta
-      if (dia <= 15) {
-        desde = new Date(now.getFullYear(), now.getMonth(), 1)
-        hasta = new Date(now.getFullYear(), now.getMonth(), 15, 23, 59, 59)
-      } else {
-        desde = new Date(now.getFullYear(), now.getMonth(), 16)
-        hasta = new Date(now.getFullYear(), now.getMonth()+1, 0, 23, 59, 59)
-      }
-      const data = await calcularNomina(desde.toISOString(), hasta.toISOString())
+    const data = await calcularNomina(periodoDesde + 'T00:00:00', periodoHasta + 'T23:59:59')
       setNomina(data)
     } catch(e) { console.error(e) }
     finally { setLoading(false) }
@@ -167,7 +162,22 @@ export default function NominaScreen({ isAdmin }) {
 
   return (
     <div className="nomina-screen">
-      <h2 className="screen-title">Nomina quincenal</h2>
+      <h2 className="screen-title">Nomina bisemanal</h2>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
+        <div>
+          <label className="field-label">Desde</label>
+          <input type="date" value={periodoDesde} onChange={function(e){setPeriodoDesde(e.target.value)}}
+            style={{width:'100%',padding:'8px 10px',borderRadius:'var(--radius-sm)',border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',fontSize:13,fontFamily:'var(--font)',color:'var(--gray-900)'}} />
+        </div>
+        <div>
+          <label className="field-label">Hasta</label>
+          <input type="date" value={periodoHasta} onChange={function(e){setPeriodoHasta(e.target.value)}}
+            style={{width:'100%',padding:'8px 10px',borderRadius:'var(--radius-sm)',border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',fontSize:13,fontFamily:'var(--font)',color:'var(--gray-900)'}} />
+        </div>
+      </div>
+      <button onClick={loadNomina} style={{width:'100%',padding:'9px',borderRadius:'var(--radius-sm)',background:'var(--teal-400)',color:'var(--black)',border:'none',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'var(--font)',marginBottom:12}}>
+        Calcular nomina
+      </button>
       <div className="stat-grid">
         <div className="stat-card"><div className="stat-lbl">Bruto total</div><div className="stat-val">${totalBruto.toFixed(2)}</div></div>
         <div className="stat-card"><div className="stat-lbl">Neto total</div><div className="stat-val" style={{color:'#1D9E75'}}>${totalNeto.toFixed(2)}</div></div>
