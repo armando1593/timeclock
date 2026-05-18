@@ -17,8 +17,8 @@ function calcularDeducciones(bruto, contribucionPR) {
 
 export default function NominaScreen({ isAdmin }) {
   const [nomina,      setNomina]      = useState([])
-const [periodoDesde, setPeriodoDesde] = useState(localStorage.getItem('nomina_desde') || '2026-05-01')
-  const [periodoHasta, setPeriodoHasta] = useState(localStorage.getItem('nomina_hasta') || '2026-05-14')
+const [periodoDesde, setPeriodoDesde] = useState('2026-05-01')
+  const [periodoHasta, setPeriodoHasta] = useState('2026-05-14')
   const [loading,  setLoading]  = useState(false)
   const [editId,   setEditId]   = useState(null)
   const [editRate, setEditRate] = useState('')
@@ -27,7 +27,17 @@ const [periodoDesde, setPeriodoDesde] = useState(localStorage.getItem('nomina_de
   const [pinError, setPinError] = useState('')
   const [miNomina, setMiNomina] = useState(null)
 
-  useEffect(function() { loadNomina() }, [])
+  useEffect(function() { loadNomina() }, [])useEffect(function() { cargarFechas() }, [])
+
+  async function cargarFechas() {
+    try {
+      const { getConfiguracion } = await import('../lib/api')
+      const config = await getConfiguracion()
+      if (config.nomina_desde) setPeriodoDesde(config.nomina_desde)
+      if (config.nomina_hasta) setPeriodoHasta(config.nomina_hasta)
+    } catch(e) { console.error(e) }
+    loadNomina()
+  }
 
   async function loadNomina() {
     setLoading(true)
@@ -169,7 +179,13 @@ const [periodoDesde, setPeriodoDesde] = useState(localStorage.getItem('nomina_de
             style={{width:'100%',padding:'8px 10px',borderRadius:'var(--radius-sm)',border:'0.5px solid var(--gray-200)',background:'var(--gray-50)',fontSize:13,fontFamily:'var(--font)',color:'var(--gray-900)'}} />
         </div>
       </div>
-      <button onClick={loadNomina} style={{width:'100%',padding:'9px',borderRadius:'var(--radius-sm)',background:'var(--teal-400)',color:'var(--black)',border:'none',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'var(--font)',marginBottom:12}}>
+      <button onClick={async function(){ 
+        try { 
+          const { updateConfiguracion } = await import('../lib/api')
+          await updateConfiguracion({ nomina_desde: periodoDesde, nomina_hasta: periodoHasta })
+        } catch(e) { console.error(e) }
+        loadNomina()
+      }} style={{width:'100%',padding:'9px',borderRadius:'var(--radius-sm)',background:'var(--teal-400)',color:'var(--black)',border:'none',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'var(--font)',marginBottom:12}}>
         Calcular nomina
       </button>
       <div className="stat-grid">
