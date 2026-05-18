@@ -90,15 +90,22 @@ const [periodoDesde, setPeriodoDesde] = useState('2026-05-01')
 
   const KEYS = ['1','2','3','4','5','6','7','8','9','←','0','✓']
 
-  async function verificarPinEmp(p) {
+async function verificarPinEmp(p) {
     const { verificarPin } = await import('../lib/api')
     const emp = await verificarPin(p)
     setPin('')
     if (!emp) { setPinError('PIN incorrecto'); return }
     setPinError('')
     setEmpleado(emp)
-    const datos = nomina.find(function(n){ return n.id === emp.id })
-    setMiNomina(datos)
+    try {
+      const { getConfiguracion } = await import('../lib/api')
+      const config = await getConfiguracion()
+      const desde = config.nomina_desde || '2026-05-01'
+      const hasta = config.nomina_hasta || '2026-05-14'
+      const nominaData = await calcularNomina(desde + 'T00:00:00', hasta + 'T23:59:59')
+      const datos = nominaData.find(function(n){ return n.id === emp.id })
+      setMiNomina(datos)
+    } catch(e) { console.error(e) }
   }
 
   if (!isAdmin) {
