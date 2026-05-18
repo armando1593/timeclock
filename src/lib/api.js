@@ -207,9 +207,9 @@ export async function getDashboardStats() {
 }
 
 export async function getConfiguracion() {
-  const { data, error } = await supabase.from('configuracion').select('*').single()
+  const { data, error } = await supabase.from('configuracion').select('*').eq('id', 1).maybeSingle()
   if (error) throw error
-  return data
+  return data || {}
 }
 
 export async function updateConfiguracion(updates) {
