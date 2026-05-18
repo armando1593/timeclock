@@ -95,7 +95,7 @@ export async function calcularNomina(desde, hasta) {
   const emps = await getEmpleados()
   return emps.map(function(emp) {
     const er = recs.filter(function(r) {
-      return r.empleados && r.empleados.id === emp.id
+      return r.empleado_id === emp.id || (r.empleados && r.empleados.id === emp.id)
     }).sort(function(a, b) {
       return new Date(a.timestamp) - new Date(b.timestamp)
     })
