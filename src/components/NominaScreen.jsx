@@ -102,9 +102,8 @@ async function verificarPinEmp(p) {
       const config = await getConfiguracion()
       const desde = config.nomina_desde || '2026-05-01'
       const hasta = config.nomina_hasta || '2026-05-14'
-      const nominaData = await calcularNomina(desde + 'T00:00:00', hasta + 'T23:59:59')
-      const datos = nominaData.find(function(n){ return n.id === emp.id })
-      setMiNomina(datos)
+      const datos = nomina.find(function(n){ return n.id === emp.id })
+      setMiNomina(datos || null)
     } catch(e) { console.error(e) }
   }
 
