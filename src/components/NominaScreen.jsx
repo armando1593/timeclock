@@ -33,10 +33,14 @@ const [periodoDesde, setPeriodoDesde] = useState('2026-05-01')
     try {
       const { getConfiguracion } = await import('../lib/api')
       const config = await getConfiguracion()
-      if (config.nomina_desde) setPeriodoDesde(config.nomina_desde)
-      if (config.nomina_hasta) setPeriodoHasta(config.nomina_hasta)
+      const desde = config.nomina_desde || '2026-05-01'
+      const hasta = config.nomina_hasta || '2026-05-14'
+      setPeriodoDesde(desde)
+      setPeriodoHasta(hasta)
+      const data = await calcularNomina(desde + 'T00:00:00', hasta + 'T23:59:59')
+      setNomina(data)
     } catch(e) { console.error(e) }
-    loadNomina()
+    finally { setLoading(false) }
   }
 
   async function loadNomina() {
