@@ -29,18 +29,21 @@ const [periodoDesde, setPeriodoDesde] = useState('2026-05-01')
 
   useEffect(function() { cargarFechas() }, [])
 
-  async function cargarFechas() {
+ async function cargarFechas() {
     try {
       const { getConfiguracion } = await import('../lib/api')
       const config = await getConfiguracion()
       const desde = config.nomina_desde || '2026-05-01'
       const hasta = config.nomina_hasta || '2026-05-14'
+      console.log('FECHAS:', desde, hasta)
       setPeriodoDesde(desde)
       setPeriodoHasta(hasta)
       const data = await calcularNomina(desde + 'T00:00:00', hasta + 'T23:59:59')
+      console.log('NOMINA DATA:', data)
       setNomina(data)
-    } catch(e) { console.error(e) }
+    } catch(e) { console.error('ERROR:', e) }
     finally { setLoading(false) }
+  }
   }
 
   async function loadNomina() {
