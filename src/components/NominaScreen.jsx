@@ -27,7 +27,7 @@ const [periodoDesde, setPeriodoDesde] = useState('2026-05-01')
   const [pinError, setPinError] = useState('')
   const [miNomina, setMiNomina] = useState(null)
 
-  useEffect(function() { loadNomina() }, [])useEffect(function() { cargarFechas() }, [])
+  useEffect(function() { cargarFechas() }, [])
 
   async function cargarFechas() {
     try {
