@@ -44,7 +44,7 @@ const [periodoDesde, setPeriodoDesde] = useState('2026-05-01')
     } catch(e) { console.error('ERROR:', e) }
     finally { setLoading(false) }
   }
-  }
+  
 
   async function loadNomina() {
     setLoading(true)
