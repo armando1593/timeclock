@@ -17,8 +17,8 @@ function calcularDeducciones(bruto, contribucionPR) {
 
 export default function NominaScreen({ isAdmin }) {
   const [nomina,      setNomina]      = useState([])
-  const [periodoDesde, setPeriodoDesde] = useState(function(){ return localStorage.getItem('nomina_desde') || '2026-05-01'('T')[0] })
-  const [periodoHasta, setPeriodoHasta] = useState(function(){ return localStorage.getItem('nomina_hasta') || '2026-05-14'('T')[0] })
+const [periodoDesde, setPeriodoDesde] = useState(localStorage.getItem('nomina_desde') || '2026-05-01')
+  const [periodoHasta, setPeriodoHasta] = useState(localStorage.getItem('nomina_hasta') || '2026-05-14')
   const [loading,  setLoading]  = useState(false)
   const [editId,   setEditId]   = useState(null)
   const [editRate, setEditRate] = useState('')
