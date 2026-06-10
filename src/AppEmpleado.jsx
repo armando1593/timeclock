@@ -25,9 +25,18 @@ export default function AppEmpleado() {
   return (
     <div className="app-shell">
       <div className="emp-header">
-        <div className="emp-header-logo">⏰</div>
+        <div className="emp-header-logo">
+          <svg width="28" height="28" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#F59E0B" rx="10"/>
+            <rect x="14" y="22" width="38" height="5" rx="2.5" fill="#080808"/>
+            <rect x="14" y="34" width="30" height="5" rx="2.5" fill="rgba(0,0,0,0.6)"/>
+            <rect x="14" y="46" width="22" height="5" rx="2.5" fill="rgba(0,0,0,0.3)"/>
+            <circle cx="60" cy="24" r="5" fill="#080808"/>
+            <text x="56" y="78" fontFamily="Arial" fontWeight="800" fontSize="32" fill="#080808">K</text>
+          </svg>
+        </div>
         <div>
-          <div className="emp-header-title">Control de Asistencia</div>
+          <div className="emp-header-title">Kron<span style={{color:'#F59E0B'}}>ik</span></div>
           <div className="emp-header-sub">VR Insurance Group</div>
         </div>
       </div>
