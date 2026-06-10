@@ -74,10 +74,19 @@ export default function AppAdmin() {
   return (
     <div className="app-shell">
       <div className="emp-header admin-header">
-        <div className="emp-header-logo">👨‍💼</div>
+        <div className="emp-header-logo">
+          <svg width="28" height="28" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#F59E0B" rx="10"/>
+            <rect x="14" y="22" width="38" height="5" rx="2.5" fill="#080808"/>
+            <rect x="14" y="34" width="30" height="5" rx="2.5" fill="rgba(0,0,0,0.6)"/>
+            <rect x="14" y="46" width="22" height="5" rx="2.5" fill="rgba(0,0,0,0.3)"/>
+            <circle cx="60" cy="24" r="5" fill="#080808"/>
+            <text x="56" y="78" fontFamily="Arial" fontWeight="800" fontSize="32" fill="#080808">K</text>
+          </svg>
+        </div>
         <div style={{flex:1}}>
-          <div className="emp-header-title">Panel de Administrador</div>
-          <div className="emp-header-sub">VR Insurance Group</div>
+          <div className="emp-header-title">Kron<span style={{color:'#F59E0B'}}>ik</span></div>
+          <div className="emp-header-sub">VR Insurance Group · Admin</div>
         </div>
         <button onClick={function() { supabase.auth.signOut() }}
           style={{fontSize:12,padding:'4px 10px',borderRadius:8,border:'0.5px solid rgba(255,255,255,0.3)',background:'rgba(255,255,255,0.15)',color:'white',cursor:'pointer'}}>
