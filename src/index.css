@@ -228,7 +228,9 @@ html,body,#root{height:100%;width:100%;font-family:var(--font);background:var(--
 .ia-send:disabled{opacity:.5}
 
 /* ── Headers de app ───────────────────────── */
-.emp-header{display:flex;align-items:center;gap:10px;padding:12px 1rem;background:var(--teal-600);color:white;flex-shrink:0}
+.emp-header{display:flex;align-items:center;gap:10px;padding:12px 1rem;background:#080808;color:white;flex-shrink:0;border-bottom:1px solid #F59E0B}
+.admin-header{background:#080808;border-bottom:1px solid #F59E0B}
+.emp-header-logo{width:36px;height:36px;border-radius:10px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .admin-header{background:#1a3a5c}
 .emp-header-logo{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .emp-header-title{font-size:15px;font-weight:500}
