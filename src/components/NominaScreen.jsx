@@ -168,6 +168,20 @@ async function verificarPinEmp(p) {
               <span style={{fontSize:15,fontWeight:500,color:'#0F6E56'}}>Tu pago neto</span>
               <span style={{fontSize:22,fontWeight:700,color:'#0F6E56'}}>${ded.neto.toFixed(2)}</span>
             </div>
+            {!miNomina.nomina_confirmada && (
+              <button className="punch-btn btn-in" style={{marginTop:10}} onClick={async function(){
+                const { supabase } = await import('../lib/supabase')
+                await supabase.from('empleados').update({ nomina_confirmada: true, nomina_confirmada_en: new Date().toISOString() }).eq('id', empleado.id)
+                setMiNomina(function(n){ return {...n, nomina_confirmada: true} })
+              }}>
+                Confirmo que mi nomina es correcta
+              </button>
+            )}
+            {miNomina.nomina_confirmada && (
+              <div style={{textAlign:'center',marginTop:10,fontSize:13,color:'#1D9E75',fontWeight:500}}>
+                Nomina confirmada
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -218,7 +232,13 @@ async function verificarPinEmp(p) {
               <div className="nomina-header">
                 <div className="emp-avatar sm">{ini}</div>
                 <div style={{flex:1}}><div className="emp-name">{emp.nombre}</div><div className="emp-dept">{emp.departamento}</div></div>
-                <div style={{textAlign:'right'}}><div style={{fontSize:11,color:'#888'}}>Neto</div><div className="nomina-total">${ded.neto.toFixed(2)}</div></div>
+               <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:11,color:'#888'}}>Neto</div>
+                  <div className="nomina-total">${ded.neto.toFixed(2)}</div>
+                  <div style={{fontSize:10,marginTop:3,color:emp.nomina_confirmada?'#1D9E75':'#888'}}>
+                    {emp.nomina_confirmada ? '✅ Confirmado' : '⏳ Pendiente'}
+                  </div>
+                </div>
               </div>
               <div className="nomina-rows">
                 <div className="nomina-row"><span>Hrs regulares</span><span>{emp.horasReg}h x ${(emp.tarifa_hora||0).toFixed(2)} = ${(emp.salarioReg||0).toFixed(2)}</span></div>
@@ -265,6 +285,13 @@ async function verificarPinEmp(p) {
         var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='nomina_'+new Date().toISOString().split('T')[0]+'.csv';a.click()
       }}>Exportar Excel (.csv)</button>
       <button className="abtn btn-in" style={{marginTop:8}} onClick={exportPDF}>Exportar PDF con deducciones</button>
+      <button className="abtn" style={{marginTop:8,background:'#1a3a5c',color:'white',border:'none'}} onClick={async function(){
+        if(!window.confirm('¿Solicitar confirmacion de nomina a todos los empleados?')) return
+        const { supabase } = await import('../lib/supabase')
+        await supabase.from('empleados').update({ nomina_confirmada: false, nomina_confirmada_en: null }).eq('activo', true)
+        alert('Solicitud enviada. Los empleados deben confirmar desde su app.')
+        loadNomina(periodoDesde, periodoHasta)
+      }}>Solicitar confirmacion de nomina</button>
     </div>
   )
 }
