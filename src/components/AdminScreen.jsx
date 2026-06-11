@@ -190,7 +190,17 @@ function RecordRow({ record: r }) {
         </div>
       </div>
       <div className="rec-right">
-        <span className={`rec-badge ${r.tipo}`}>{r.tipo === 'entrada' ? 'Entrada' : 'Salida'}</span>
+       <span className={`rec-badge ${r.tipo}`}>{r.tipo === 'entrada' ? 'Entrada' : 'Salida'}</span>
+            <button onClick={async function(){
+              if(window.confirm('¿Borrar este registro?')){
+                const { supabase } = await import('../lib/supabase')
+                await supabase.from('registros').delete().eq('id', r.id)
+                setRecs(function(prev){ return prev.filter(function(x){ return x.id !== r.id }) })
+              }
+            }} style={{fontSize:11,padding:'3px 8px',borderRadius:6,background:'rgba(216,90,48,.15)',border:'0.5px solid rgba(216,90,48,.3)',color:'#D85A30',cursor:'pointer',marginLeft:4}}>
+              Borrar
+            </button>
+          </div>
         <div className="rec-time">{date} {time}</div>
         {r.foto_url && <a href={r.foto_url} target="_blank" rel="noreferrer" className="foto-link">Foto</a>}
       </div>
