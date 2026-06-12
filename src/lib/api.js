@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
 export async function getEmpleados() {
-  const { data, error } = await supabase.from('empleados').select('id, nombre, departamento, horas_meta, tarifa_hora, tipo_pago, contribucion_pr').eq('activo', true).order('nombre')
+  const { data, error } = await supabase.from('empleados').select('id, nombre, departamento, horas_meta, tarifa_hora, tipo_pago, contribucion_pr, nomina_confirmada, nomina_confirmada_en').eq('activo', true).order('nombre')
   if (error) throw error
   return data
 }
