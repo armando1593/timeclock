@@ -125,7 +125,9 @@ export async function calcularNomina(desde, hasta) {
       salarioReg: Math.round(horasReg * tarifa * 100) / 100,
       salarioExtra: Math.round(horasExtra * tarifa * 1.5 * 100) / 100,
       salarioTotal: Math.round((horasReg * tarifa + horasExtra * tarifa * 1.5) * 100) / 100,
-      contribucion_pr: emp.contribucion_pr || 0,
+      contribucion_pr: emp.contribucion_pr || 0,contribucion_pr: emp.contribucion_pr || 0,
+      nomina_confirmada: emp.nomina_confirmada || false,
+      nomina_confirmada_en: emp.nomina_confirmada_en || null,
     }
   })
 }
